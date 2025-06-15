@@ -22,6 +22,7 @@ uniform mat4 projection;
 #define SPHERE 0
 #define BUNNY  1
 #define PLANE  2
+#define BUILDING 3
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -91,6 +92,10 @@ void main()
     float V = 0.0;
     vec3 texColor = vec3(0.0, 0.0, 0.0);
 
+    // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
+    vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
+    vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
+
     if ( object_id == SPHERE )
     {
         // PREENCHA AQUI as coordenadas de textura da esfera, computadas com
@@ -147,6 +152,14 @@ void main()
         //U = 0.0;
         //V = 0.0;
     }
+    else if ( object_id == BUILDING )
+    {
+        // Coordenadas de textura do predio
+        // Obtidas pelo arquivo .obj
+        U = texcoords.x;
+        V = texcoords.y;
+        Kd0 = texture(TextureImage2, vec2(U,V)).rgb;
+    }
     else if ( object_id == PLANE )
     {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
@@ -158,15 +171,12 @@ void main()
     vec3 Ia = vec3(0.1,0.1,0.1);
     vec3 ambient_term = texColor * Ia;
 
-    // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-    vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
-    vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
-
     // Equação de Iluminação
     float lambert0 = max(0,dot(n,l));
     float lambert1 = max(0,dot(n,-l));  // Atentar para o termo "-l" que garante a renderização final correta
 
-    vec3 diffuse  = (Kd0 * lambert0 + Kd1 * lambert1) * spotFactor;
+    //vec3 diffuse  = (Kd0 * lambert0 + Kd1 * lambert1) * spotFactor;
+    vec3 diffuse  = (Kd0 * lambert0) * spotFactor;
 
     color.rgb = diffuse + ambient_term;
 

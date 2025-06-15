@@ -163,9 +163,6 @@ struct SceneObject
     GLuint       vertex_array_object_id; // ID do VAO onde estão armazenados os atributos do modelo
     glm::vec3    bbox_min; // Axis-Aligned Bounding Box do objeto
     glm::vec3    bbox_max;
-
-    //Teste para adicionar textura
-    GLuint       texture_id; // ID da textura associada ao objeto, se houver
 };
 
 // Abaixo definimos variáveis globais utilizadas em várias funções do código.
@@ -313,7 +310,7 @@ int main(int argc, char* argv[])
     // Carregamos duas imagens para serem utilizadas como textura
     LoadTextureImage("../../data/tc-earth_daymap_surface.jpg");      // TextureImage0
     LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
-    LoadTextureImage("../../data/Image_0.jpg");
+    LoadTextureImage("../../data/brick_texture.png"); // TextureImage2
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     //ObjModel spheremodel("../../data/sphere.obj");
@@ -331,15 +328,6 @@ int main(int argc, char* argv[])
     ObjModel planemodel("../../data/plane.obj");
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
-
-    // Teste para carregar textura
-    // std::string basepath = "data/";  // o mesmo que o ObjModel usou
-    // for (auto &mat : buildingModel.materials) {
-    //     if (!mat.diffuse_texname.empty()) {
-    //         std::string texfile = basepath + mat.diffuse_texname;  
-    //         LoadTextureImage(texfile.c_str());
-    //     }
-    // }
 
     if ( argc > 1 )
     {
@@ -486,6 +474,7 @@ int main(int argc, char* argv[])
         #define SPHERE 0
         #define BUNNY  1
         #define PLANE  2
+        #define BUILDING 3
 
         // Desenhamos o modelo da esfera
         //model = Matrix_Translate(-1.0f,0.0f,0.0f)
@@ -505,7 +494,7 @@ int main(int argc, char* argv[])
               //* Matrix_Rotate_Y(3.14f)   // pi
               * Matrix_Scale(0.1111f, 0.1111f, 0.1111f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, BUNNY);
+        glUniform1i(g_object_id_uniform, BUILDING);
         //DrawVirtualObject("the_bunny");
         //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
         //DrawVirtualObject("inf_building");
