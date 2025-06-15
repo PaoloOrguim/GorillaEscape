@@ -58,15 +58,38 @@ void main()
     // normais de cada vértice.
     vec4 n = normalize(normal);
 
-    // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    vec4 l = normalize(vec4(1.0,1.0,0.0,0.0));
-
     // Vetor que define o sentido da câmera em relação ao ponto atual.
     vec4 v = normalize(camera_position - p);
+
+    // Implementação de fonte de luz do tipo spotlight com abertura de 30º
+    vec4 light_position  = camera_position;
+
+    // direção da câmera em world space:
+    vec4 forward_cam    = vec4(0.0, 0.0, -1.0, 0.0);
+    vec3 camera_forward = normalize( (inverse(view) * forward_cam).xyz );
+    // agora a spotlight “olha” junto com a câmera:
+    vec4 light_direction = vec4(camera_forward, 0.0);
+
+    float light_cutoff = cos(radians(30.0));
+
+    // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
+    //vec4 l = normalize(vec4(1.0,1.0,0.0,0.0));
+    vec4 l = normalize(light_position - p);
+
+    // Verifica se o ponto está dentro do cone de luz do spotlight
+    float opening_angle = dot(l, -light_direction);
+    float innerAngle = radians(20.0);   // ângulo interno do cone de luz
+    float outerAngle = radians(30.0);   // ângulo externo do cone de luz
+    float innerCutoff = cos(innerAngle);
+    float outerCutoff = cos(outerAngle);
+    float spotFactor = smoothstep( outerCutoff, innerCutoff, opening_angle );   // Fator de suavização do cone de luz
+
+    vec4 r = -l + 2 * n * dot(n, l);
 
     // Coordenadas de textura U e V
     float U = 0.0;
     float V = 0.0;
+    vec3 texColor = vec3(0.0, 0.0, 0.0);
 
     if ( object_id == SPHERE )
     {
@@ -120,6 +143,7 @@ void main()
 
         U = (position_model.x - minx) / (maxx - minx);  // Vide questionario 4 - questao 4
         V = (position_model.y - miny) / (maxy - miny);
+        texColor = texture(TextureImage0, vec2(U,V)).rgb;
         //U = 0.0;
         //V = 0.0;
     }
@@ -130,6 +154,10 @@ void main()
         V = texcoords.y;
     }
 
+    // Espectro da luz ambiente
+    vec3 Ia = vec3(0.1,0.1,0.1);
+    vec3 ambient_term = texColor * Ia;
+
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
     vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
     vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
@@ -138,7 +166,22 @@ void main()
     float lambert0 = max(0,dot(n,l));
     float lambert1 = max(0,dot(n,-l));  // Atentar para o termo "-l" que garante a renderização final correta
 
-    color.rgb = Kd0 * (lambert0 + 0.01) + Kd1 * (lambert1 + 0.01);
+    vec3 diffuse  = (Kd0 * lambert0 + Kd1 * lambert1) * spotFactor;
+
+    color.rgb = diffuse + ambient_term;
+
+    // Se o ponto não está dentro do cone de luz, não há iluminação
+    //if (opening_angle > light_cutoff)
+    //{
+    //    color.rgb = (Kd0 * (lambert0 + 0.01) + Kd1 * (lambert1 + 0.01)) * spotFactor;
+    //}
+    //else
+    //{
+    //    color.rgb = ambient_term;
+    //}
+    
+    
+    //color.rgb = Kd0 * (lambert0 + 0.01) + Kd1 * (lambert1 + 0.01);
 
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
     // necessário:
