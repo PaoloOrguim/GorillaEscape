@@ -319,8 +319,8 @@ int main(int argc, char* argv[])
     BuildTrianglesAndAddToVirtualScene(&spheremodel);
 
     //ObjModel bunnymodel("../../data/bunny.obj");
-    ObjModel bunnymodel("../../data/factory_building_2.obj");
-    //ObjModel bunnymodel("../../data/inf_building.obj");
+    //ObjModel bunnymodel("../../data/factory_building_2.obj");
+    ObjModel bunnymodel("../../data/inf_building_v2.obj");
     ComputeNormals(&bunnymodel);
     BuildTrianglesAndAddToVirtualScene(&bunnymodel);
 
@@ -475,26 +475,33 @@ int main(int argc, char* argv[])
         #define PLANE  2
 
         // Desenhamos o modelo da esfera
-        model = Matrix_Translate(-1.0f,0.0f,0.0f)
-              * Matrix_Rotate_Z(0.6f)
-              * Matrix_Rotate_X(0.2f)
-              * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, SPHERE);
+        //model = Matrix_Translate(-1.0f,0.0f,0.0f)
+        //      * Matrix_Rotate_Z(0.6f)
+        //      * Matrix_Rotate_X(0.2f)
+        //      * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
+        //glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        //glUniform1i(g_object_id_uniform, SPHERE);
         //DrawVirtualObject("the_sphere");
-        DrawVirtualObject("the_gorilla");
+        //DrawVirtualObject("the_gorilla");
 
         // Desenhamos o modelo do coelho
         model = Matrix_Translate(0.0f,0.0f,0.0f)
               //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
-              * Matrix_Scale(0.001f, 0.001f, 0.001f);
+              * Matrix_Rotate_X(1.57f)   // pi/2
+              * Matrix_Rotate_Z(g_AngleZ)
+              * Matrix_Rotate_Y(3.14f)   // pi
+              * Matrix_Scale(0.1111f, 0.1111f, 0.1111f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUNNY);
         //DrawVirtualObject("the_bunny");
-        DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
+        //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
+        DrawVirtualObject("inf_building");
+        
 
         // Desenhamos o plano do chão
-        model = Matrix_Translate(0.0f,-1.1f,0.0f);
+        //model = Matrix_Translate(0.0f,-1.1f,0.0f);
+        model = Matrix_Translate(0.0f,0.0f,0.0f)
+              * Matrix_Scale(10.0f, 10.0f, 10.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
