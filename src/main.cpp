@@ -163,6 +163,9 @@ struct SceneObject
     GLuint       vertex_array_object_id; // ID do VAO onde estão armazenados os atributos do modelo
     glm::vec3    bbox_min; // Axis-Aligned Bounding Box do objeto
     glm::vec3    bbox_max;
+
+    //Teste para adicionar textura
+    GLuint       texture_id; // ID da textura associada ao objeto, se houver
 };
 
 // Abaixo definimos variáveis globais utilizadas em várias funções do código.
@@ -320,13 +323,23 @@ int main(int argc, char* argv[])
 
     //ObjModel bunnymodel("../../data/bunny.obj");
     //ObjModel bunnymodel("../../data/factory_building_2.obj");
-    ObjModel bunnymodel("../../data/inf_building_v2.obj");
+    //ObjModel bunnymodel("../../data/inf_building_v2.obj");
+    ObjModel bunnymodel("../../data/test_building.obj");
     ComputeNormals(&bunnymodel);
     BuildTrianglesAndAddToVirtualScene(&bunnymodel);
 
     ObjModel planemodel("../../data/plane.obj");
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
+
+    // Teste para carregar textura
+    // std::string basepath = "data/";  // o mesmo que o ObjModel usou
+    // for (auto &mat : buildingModel.materials) {
+    //     if (!mat.diffuse_texname.empty()) {
+    //         std::string texfile = basepath + mat.diffuse_texname;  
+    //         LoadTextureImage(texfile.c_str());
+    //     }
+    // }
 
     if ( argc > 1 )
     {
@@ -487,15 +500,16 @@ int main(int argc, char* argv[])
         // Desenhamos o modelo do coelho
         model = Matrix_Translate(0.0f,0.0f,0.0f)
               //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
-              * Matrix_Rotate_X(1.57f)   // pi/2
-              * Matrix_Rotate_Z(g_AngleZ)
-              * Matrix_Rotate_Y(3.14f)   // pi
+              //* Matrix_Rotate_X(1.57f)   // pi/2
+              //* Matrix_Rotate_Z(g_AngleZ)
+              //* Matrix_Rotate_Y(3.14f)   // pi
               * Matrix_Scale(0.1111f, 0.1111f, 0.1111f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUNNY);
         //DrawVirtualObject("the_bunny");
         //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
-        DrawVirtualObject("inf_building");
+        //DrawVirtualObject("inf_building");
+        DrawVirtualObject("test_building");
         
 
         // Desenhamos o plano do chão
@@ -834,6 +848,7 @@ void BuildTrianglesAndAddToVirtualScene(ObjModel* model)
         }
 
         size_t last_index = indices.size() - 1;
+
 
         SceneObject theobject;
         theobject.name           = model->shapes[shape].name;
