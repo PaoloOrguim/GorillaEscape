@@ -24,6 +24,7 @@ uniform mat4 projection;
 #define GORILLA  1
 #define PLANE  2
 #define BUILDING 3
+#define DOME 4
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -35,6 +36,7 @@ uniform sampler2D TextureImage0;    //  Building
 uniform sampler2D TextureImage1;    // Gorilla
 uniform sampler2D TextureImage2;    // Grass
 uniform sampler2D TextureImage3;    // Banana
+uniform sampler2D TextureImage4;    // Domo
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -212,6 +214,20 @@ void main()
         V = texcoords.y;
         Kd0 = texture(TextureImage2, vec2(U,V)).rgb;
         texColor = texture(TextureImage2, vec2(U,V)).rgb;
+    }
+    else if ( object_id == DOME )
+    {
+        // Coordenadas de textura do domo, obtidas do arquivo OBJ.
+        U = texcoords.x;
+        V = texcoords.y;
+        Kd0 = texture(TextureImage4, vec2(U,V)).rgb;
+        texColor = texture(TextureImage4, vec2(U,V)).rgb;
+    }
+    else
+    {
+        // Caso não seja nenhum dos objetos acima, a cor é preta.
+        Kd0 = vec3(0.0, 0.0, 0.0);
+        texColor = vec3(0.0, 0.0, 0.0);
     }
 
     // Espectro da luz ambiente

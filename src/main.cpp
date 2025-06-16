@@ -263,7 +263,7 @@ int main(int argc, char* argv[])
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow* window;
-    window = glfwCreateWindow(800, 600, "INF01047 - Gorilla: The Eight Bananas - Paolo & Érico", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "INF01047 - Gorilla Escape - Paolo & Érico", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -312,6 +312,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/gorilla_texture.jpg"); // TextureImage1
     LoadTextureImage("../../data/grass.png"); // TextureImage2
     LoadTextureImage("../../data/banana_texture.png"); // TextureImage3
+    LoadTextureImage("../../data/dome_texture.png"); // TextureImage4
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     //ObjModel spheremodel("../../data/sphere.obj");
@@ -332,6 +333,10 @@ int main(int argc, char* argv[])
     ObjModel planemodel("../../data/plane.obj");
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
+
+    ObjModel skyboxmodel("../../data/skybox.obj");
+    ComputeNormals(&skyboxmodel);
+    BuildTrianglesAndAddToVirtualScene(&skyboxmodel);
 
     if ( argc > 1 )
     {
@@ -479,6 +484,7 @@ int main(int argc, char* argv[])
         #define GORILLA  1
         #define PLANE  2
         #define BUILDING 3
+        #define DOME 4
 
         // Desenhamos o modelo da esfera
         model = Matrix_Translate(-4.0f,0.5f,0.0f);
@@ -576,6 +582,12 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
+
+        model = Matrix_Translate(0.0f,9.0f,0.0f)
+              * Matrix_Scale(1.75f, 1.75f, 1.75f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, DOME);
+        DrawVirtualObject("skybox");
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
@@ -744,6 +756,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage1"), 1);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage2"), 2);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage3"), 3);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage4"), 4);
     glUseProgram(0);
 }
 
