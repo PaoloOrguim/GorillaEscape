@@ -440,7 +440,7 @@ int main(int argc, char* argv[])
         // Note que, no sistema de coordenadas da câmera, os planos near e far
         // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
         float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -10.0f; // Posição do "far plane"
+        float farplane  = -25.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
         {
@@ -477,14 +477,13 @@ int main(int argc, char* argv[])
         #define BUILDING 3
 
         // Desenhamos o modelo da esfera
-        //model = Matrix_Translate(-1.0f,0.0f,0.0f)
-        //      * Matrix_Rotate_Z(0.6f)
-        //      * Matrix_Rotate_X(0.2f)
-        //      * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
-        //glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        //glUniform1i(g_object_id_uniform, SPHERE);
-        //DrawVirtualObject("the_sphere");
-        //DrawVirtualObject("the_gorilla");
+        model = Matrix_Translate(-4.0f,0.5f,0.0f);
+            //  * Matrix_Rotate_Z(0.6f)
+            //  * Matrix_Rotate_X(0.2f)
+            //  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, SPHERE);
+        DrawVirtualObject("the_gorilla");
 
         // Desenhamos o modelo do coelho
         model = Matrix_Translate(0.0f,0.0f,0.0f)
@@ -492,6 +491,62 @@ int main(int argc, char* argv[])
               //* Matrix_Rotate_X(1.57f)   // pi/2
               //* Matrix_Rotate_Z(g_AngleZ)
               //* Matrix_Rotate_Y(3.14f)   // pi
+              * Matrix_Scale(0.1111f, 0.1111f, 0.1111f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, BUILDING);
+        //DrawVirtualObject("the_bunny");
+        //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
+        //DrawVirtualObject("inf_building");
+        DrawVirtualObject("test_building");
+
+        // Desenhamos o modelo do coelho
+        model = Matrix_Translate(5.0f,0.0f,0.0f)
+              //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
+              //* Matrix_Rotate_X(1.57f)   // pi/2
+              //* Matrix_Rotate_Z(g_AngleZ)
+              //* Matrix_Rotate_Y(3.14f)   // pi
+              * Matrix_Scale(0.1111f, 0.1111f, 0.1111f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, BUILDING);
+        //DrawVirtualObject("the_bunny");
+        //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
+        //DrawVirtualObject("inf_building");
+        DrawVirtualObject("test_building");
+
+        // Desenhamos o modelo do coelho
+        model = Matrix_Translate(-5.0f,0.0f,0.0f)
+              //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
+              //* Matrix_Rotate_X(1.57f)   // pi/2
+              //* Matrix_Rotate_Z(g_AngleZ)
+              //* Matrix_Rotate_Y(3.14f)   // pi
+              * Matrix_Scale(0.1111f, 0.1111f, 0.1111f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, BUILDING);
+        //DrawVirtualObject("the_bunny");
+        //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
+        //DrawVirtualObject("inf_building");
+        DrawVirtualObject("test_building");
+
+        // Desenhamos o modelo do coelho
+        model = Matrix_Translate(4.0f,0.0f,6.0f)
+              //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
+              //* Matrix_Rotate_X(1.57f)   // pi/2
+              //* Matrix_Rotate_Z(g_AngleZ)
+              * Matrix_Rotate_Y(1.57f)   // pi
+              * Matrix_Scale(0.1111f, 0.1111f, 0.1111f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, BUILDING);
+        //DrawVirtualObject("the_bunny");
+        //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
+        //DrawVirtualObject("inf_building");
+        DrawVirtualObject("test_building");
+
+        // Desenhamos o modelo do coelho
+        model = Matrix_Translate(-4.0f,0.0f,6.0f)
+              //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
+              //* Matrix_Rotate_X(1.57f)   // pi/2
+              //* Matrix_Rotate_Z(g_AngleZ)
+              * Matrix_Rotate_Y(1.57f)   // pi
               * Matrix_Scale(0.1111f, 0.1111f, 0.1111f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUILDING);
