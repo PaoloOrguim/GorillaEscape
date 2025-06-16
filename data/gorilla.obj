@@ -1,6 +1,6 @@
 # Blender 3.6.0
 # www.blender.org
-mtllib model.mtl
+mtllib gorilla_mtl.mtl
 o Mesh_0
 v 0.529316 0.210401 -0.052159
 v 0.529794 0.219866 -0.051640
@@ -81723,7 +81723,7 @@ vt 0.996094 0.077148
 vt 0.993164 0.071777
 s 1
 usemtl Material_0
-g the_gorilla
+g gorilla
 f 1/1/1 2/2/2 3/3/3
 f 3/3/3 4/4/4 1/1/1
 f 5/5/5 6/6/6 7/7/7

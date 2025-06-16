@@ -263,7 +263,7 @@ int main(int argc, char* argv[])
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow* window;
-    window = glfwCreateWindow(800, 600, "INF01047 - Seu Cartao - Seu Nome", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "INF01047 - Gorilla: The Eight Bananas - Paolo & Érico", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -308,22 +308,26 @@ int main(int argc, char* argv[])
     LoadShadersFromFiles();
 
     // Carregamos duas imagens para serem utilizadas como textura
-    LoadTextureImage("../../data/tc-earth_daymap_surface.jpg");      // TextureImage0
-    LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
-    LoadTextureImage("../../data/brick_texture.png"); // TextureImage2
+    LoadTextureImage("../../data/brick_texture.png"); // TextureImage0
+    LoadTextureImage("../../data/gorilla_texture.jpg"); // TextureImage1
+    LoadTextureImage("../../data/grass.png"); // TextureImage2
+    LoadTextureImage("../../data/banana_texture.png"); // TextureImage3
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     //ObjModel spheremodel("../../data/sphere.obj");
-    ObjModel spheremodel("../../data/gorilla.obj");
-    ComputeNormals(&spheremodel);
-    BuildTrianglesAndAddToVirtualScene(&spheremodel);
+    ObjModel gorillamodel("../../data/gorilla.obj");
+    ComputeNormals(&gorillamodel);
+    BuildTrianglesAndAddToVirtualScene(&gorillamodel);
 
-    //ObjModel bunnymodel("../../data/bunny.obj");
+    ObjModel bananamodel("../../data/banana.obj");
+    ComputeNormals(&bananamodel);
+    BuildTrianglesAndAddToVirtualScene(&bananamodel);
+
     //ObjModel bunnymodel("../../data/factory_building_2.obj");
     //ObjModel bunnymodel("../../data/inf_building_v2.obj");
-    ObjModel bunnymodel("../../data/test_building.obj");
-    ComputeNormals(&bunnymodel);
-    BuildTrianglesAndAddToVirtualScene(&bunnymodel);
+    ObjModel buildingmodel("../../data/test_building.obj");
+    ComputeNormals(&buildingmodel);
+    BuildTrianglesAndAddToVirtualScene(&buildingmodel);
 
     ObjModel planemodel("../../data/plane.obj");
     ComputeNormals(&planemodel);
@@ -471,8 +475,8 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(g_projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
-        #define SPHERE 0
-        #define BUNNY  1
+        #define BANANA 0
+        #define GORILLA  1
         #define PLANE  2
         #define BUILDING 3
 
@@ -482,8 +486,17 @@ int main(int argc, char* argv[])
             //  * Matrix_Rotate_X(0.2f)
             //  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, SPHERE);
-        DrawVirtualObject("the_gorilla");
+        glUniform1i(g_object_id_uniform, GORILLA);
+        DrawVirtualObject("gorilla");
+
+        model = Matrix_Translate(-4.0f,0.5f,1.0f)
+              * Matrix_Scale(0.1f, 0.1f, 0.1f);
+            //  * Matrix_Rotate_Z(0.6f)
+            //  * Matrix_Rotate_X(0.2f)
+            //  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, BANANA);
+        DrawVirtualObject("banana");
 
         // Desenhamos o modelo do coelho
         model = Matrix_Translate(0.0f,0.0f,0.0f)
@@ -730,6 +743,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage0"), 0);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage1"), 1);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage2"), 2);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage3"), 3);
     glUseProgram(0);
 }
 
