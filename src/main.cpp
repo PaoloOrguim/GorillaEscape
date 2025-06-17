@@ -48,6 +48,8 @@
 #include "utils.h"
 #include "matrices.h"
 
+#include "collisions.h"
+
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 struct ObjModel
@@ -194,6 +196,9 @@ bool g_WPressed = false;
 bool g_APressed = false;
 bool g_SPressed = false;
 bool g_DPressed = false;
+bool g_EPressed = false;
+
+bool bananaCollected = false;
 
 glm::vec4 delta_camera = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f); // Ponto "c", centro da câmera
 
@@ -381,7 +386,7 @@ int main(int argc, char* argv[])
         glm::mat4 view;
     
 
-        
+        glm::vec4 player_position;
         if (g_UseLookAtCamera)
         {
             // Computamos a posição da câmera utilizando coordenadas esféricas.  As
@@ -440,6 +445,7 @@ int main(int argc, char* argv[])
             }
 
             view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
+            player_position = camera_position_c;
         }
         
         
@@ -495,14 +501,29 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, GORILLA);
         DrawVirtualObject("gorilla");
 
-        model = Matrix_Translate(-4.0f,0.5f,1.0f)
-              * Matrix_Scale(0.1f, 0.1f, 0.1f);
-            //  * Matrix_Rotate_Z(0.6f)
-            //  * Matrix_Rotate_X(0.2f)
-            //  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, BANANA);
-        DrawVirtualObject("banana");
+        glm::vec3 playerBoxCenter = glm::vec3(player_position);
+        glm::vec3 playerBoxSize = glm::vec3(0.5f, 0.5f, 0.5f);
+        glm::vec3 sphereCenter = glm::vec3(-4.0f, 0.5f, 1.0f);  // Hardcoded with the same coordinates as the banana model
+        float sphereRadius = 0.5f;
+        bool hit = collisionCheckBoxSphere(playerBoxCenter, playerBoxSize, sphereCenter, sphereRadius);
+
+        if (hit){    // On collision, press E to collect the banana
+            if (g_EPressed) {
+                bananaCollected = true;
+                printf("Banana coletada!\n");
+            }
+        }
+
+        if (!bananaCollected){  // Only draw the banana if it has not been collected
+            model = Matrix_Translate(-4.0f,0.5f,1.0f)
+                * Matrix_Scale(0.1f, 0.1f, 0.1f);
+                //  * Matrix_Rotate_Z(0.6f)
+                //  * Matrix_Rotate_X(0.2f)
+                //  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
+            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(g_object_id_uniform, BANANA);
+            DrawVirtualObject("banana");
+        }
 
         // Desenhamos o modelo do coelho
         model = Matrix_Translate(0.0f,0.0f,0.0f)
@@ -588,6 +609,8 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, DOME);
         DrawVirtualObject("skybox");
+
+
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
@@ -1412,6 +1435,15 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         g_DPressed = true;
         else if (action == GLFW_RELEASE)
         g_DPressed = false;
+    }
+
+    // Se o usuário apertar a tecla E, realizamos alguma ação especial.
+    if (key == GLFW_KEY_E)
+    {
+        if (action == GLFW_PRESS)
+        g_EPressed = true;
+        else if (action == GLFW_RELEASE)
+        g_EPressed = false;
     }
 
     // Se o usuário apertar a tecla R, recarregamos os shaders dos arquivos "shader_fragment.glsl" e "shader_vertex.glsl".
