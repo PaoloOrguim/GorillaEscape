@@ -176,6 +176,8 @@ struct SceneObject
 // (map).  Veja dentro da função BuildTrianglesAndAddToVirtualScene() como que são incluídos
 // objetos dentro da variável g_VirtualScene, e veja na função main() como
 // estes são acessados.
+
+//GLOBALS
 std::map<std::string, SceneObject> g_VirtualScene;
 
 // Pilha que guardará as matrizes de modelagem.
@@ -202,6 +204,9 @@ bool g_DPressed = false;
 bool g_EPressed = false;
 
 bool bananaCollected = false;
+
+float g_LastFrameTime = 0.0f;
+
 
 glm::vec4 delta_camera = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f); // Ponto "c", centro da câmera
 
@@ -371,8 +376,10 @@ int main(int argc, char* argv[])
     }
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
+    //LOOP
     while (!glfwWindowShouldClose(window))
     {
+
         // Aqui executamos as operações de renderização
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor é
@@ -440,7 +447,13 @@ int main(int argc, char* argv[])
             // Normalizamos os vetores u e w
             w = w / norm(w);
             u = u / norm(u);
-            float speed = 0.01;
+
+            float currentTime = (float)glfwGetTime();
+            float deltaTime = currentTime - g_LastFrameTime;
+            g_LastFrameTime = currentTime;
+
+
+            float speed = 2 * deltaTime;
             if(g_WPressed){
                 delta_camera-= w*speed;
             }
