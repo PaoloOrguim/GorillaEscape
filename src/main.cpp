@@ -49,6 +49,7 @@
 #include "matrices.h"
 
 #include "collisions.h"
+#include "miniaudio.h"
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
