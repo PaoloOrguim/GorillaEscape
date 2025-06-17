@@ -49,6 +49,8 @@
 #include "matrices.h"
 
 #include "collisions.h"
+
+//#include <unistd.h> // For audio testing, remove later
 #include "miniaudio.h"
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
@@ -361,6 +363,13 @@ int main(int argc, char* argv[])
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
+    
+    ma_engine audioEngine;
+    if (ma_engine_init(NULL, &audioEngine) != MA_SUCCESS) {
+        fprintf(stderr, "Failed to initialize audio engine\n");
+        std::exit(EXIT_FAILURE);
+    }
+
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -508,10 +517,12 @@ int main(int argc, char* argv[])
         float sphereRadius = 0.5f;
         bool hit = collisionCheckBoxSphere(playerBoxCenter, playerBoxSize, sphereCenter, sphereRadius);
 
-        if (hit){    // On collision, press E to collect the banana
+        // Collision is ALWAYS calculated currently, but we can optimize this by calculating it inside the if statement after checking if the banana has been collected
+        if (hit && !bananaCollected){    // On collision, press E to collect the banana
             if (g_EPressed) {
                 bananaCollected = true;
                 printf("Banana coletada!\n");
+                ma_engine_play_sound(&audioEngine, "../../data/banana.wav", NULL);
             }
         }
 
@@ -641,6 +652,8 @@ int main(int argc, char* argv[])
 
     // Finalizamos o uso dos recursos do sistema operacional
     glfwTerminate();
+
+    ma_engine_uninit(&audioEngine);
 
     // Fim do programa
     return 0;
