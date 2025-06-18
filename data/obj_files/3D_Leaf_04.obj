@@ -1,7 +1,9 @@
 # Blender 4.4.3
 # www.blender.org
-mtllib ../mtl_files/3D_Leave_04.mtl
+# IMPORTANTE O "g nome" vir depois do "o nome"
+mtllib ../mtl_files/3D_Leaf_04.mtl
 o Leaves_04
+g Leaf_04
 v -0.021932 0.004790 0.029660
 v 0.011098 0.004697 0.028700
 v -0.022529 0.005322 -0.008227

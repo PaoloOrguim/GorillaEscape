@@ -326,6 +326,8 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/texture_files/grass.png"); // TextureImage2
     LoadTextureImage("../../data/texture_files/banana_texture.png"); // TextureImage3
     LoadTextureImage("../../data/texture_files/dome_texture.png"); // TextureImage4
+    LoadTextureImage("../../data/texture_files/textures_V2/Leaves_04/Leaves_04_BaseColor.png"); // TextureImage5
+    LoadTextureImage("../../data/texture_files/textures_V2/Leaves_04/Leaves_04_BaseColor.png"); // TextureImage6
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     //ObjModel spheremodel("../../data/sphere.obj");
@@ -350,6 +352,10 @@ int main(int argc, char* argv[])
     ObjModel skyboxmodel("../../data/obj_files/skybox.obj");
     ComputeNormals(&skyboxmodel);
     BuildTrianglesAndAddToVirtualScene(&skyboxmodel);
+
+    ObjModel leaf4model("../../data/obj_files/3D_Leaf_04.obj");
+    ComputeNormals(&leaf4model);
+    BuildTrianglesAndAddToVirtualScene(&leaf4model);
 
     if ( argc > 1 )
     {
@@ -543,6 +549,7 @@ int main(int argc, char* argv[])
         #define PLANE  2
         #define BUILDING 3
         #define DOME 4
+        #define LEAF_04 5
 
         // Desenhamos o modelo da esfera
         model = Matrix_Translate(-4.0f,0.5f,0.0f);
@@ -578,6 +585,16 @@ int main(int argc, char* argv[])
             glUniform1i(g_object_id_uniform, BANANA);
             DrawVirtualObject("banana");
         }
+
+        model = Matrix_Translate(-4.0f,1.5f,1.0f)
+                * Matrix_Scale(1.0f, 1.0f, 1.0f);
+            //  * Matrix_Rotate_Z(0.6f)
+            //  * Matrix_Rotate_X(0.2f)
+            //  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, LEAF_04);
+        DrawVirtualObject("Leaf_04");
+        
 
         // Desenhamos o modelo do coelho
         model = Matrix_Translate(0.0f,0.0f,0.0f)
@@ -836,6 +853,8 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage2"), 2);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage3"), 3);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage4"), 4);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage5"), 5);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage6"), 6);
     glUseProgram(0);
 }
 
