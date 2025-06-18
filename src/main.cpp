@@ -321,33 +321,33 @@ int main(int argc, char* argv[])
     LoadShadersFromFiles();
 
     // Carregamos duas imagens para serem utilizadas como textura
-    LoadTextureImage("../../data/brick_texture.png"); // TextureImage0
-    LoadTextureImage("../../data/gorilla_texture.jpg"); // TextureImage1
-    LoadTextureImage("../../data/grass.png"); // TextureImage2
-    LoadTextureImage("../../data/banana_texture.png"); // TextureImage3
-    LoadTextureImage("../../data/dome_texture.png"); // TextureImage4
+    LoadTextureImage("../../data/texture_files/brick_texture.png"); // TextureImage0
+    LoadTextureImage("../../data/texture_files/gorilla_texture.jpg"); // TextureImage1
+    LoadTextureImage("../../data/texture_files/grass.png"); // TextureImage2
+    LoadTextureImage("../../data/texture_files/banana_texture.png"); // TextureImage3
+    LoadTextureImage("../../data/texture_files/dome_texture.png"); // TextureImage4
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     //ObjModel spheremodel("../../data/sphere.obj");
-    ObjModel gorillamodel("../../data/gorilla.obj");
+    ObjModel gorillamodel("../../data/obj_files/gorilla.obj");
     ComputeNormals(&gorillamodel);
     BuildTrianglesAndAddToVirtualScene(&gorillamodel);
 
-    ObjModel bananamodel("../../data/banana.obj");
+    ObjModel bananamodel("../../data/obj_files/banana.obj");
     ComputeNormals(&bananamodel);
     BuildTrianglesAndAddToVirtualScene(&bananamodel);
 
     //ObjModel bunnymodel("../../data/factory_building_2.obj");
     //ObjModel bunnymodel("../../data/inf_building_v2.obj");
-    ObjModel buildingmodel("../../data/test_building.obj");
+    ObjModel buildingmodel("../../data/obj_files/test_building.obj");
     ComputeNormals(&buildingmodel);
     BuildTrianglesAndAddToVirtualScene(&buildingmodel);
 
-    ObjModel planemodel("../../data/plane.obj");
+    ObjModel planemodel("../../data/obj_files/plane.obj");
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
 
-    ObjModel skyboxmodel("../../data/skybox.obj");
+    ObjModel skyboxmodel("../../data/obj_files/skybox.obj");
     ComputeNormals(&skyboxmodel);
     BuildTrianglesAndAddToVirtualScene(&skyboxmodel);
 
@@ -564,7 +564,7 @@ int main(int argc, char* argv[])
             if (g_EPressed) {
                 bananaCollected = true;
                 printf("Banana coletada!\n");
-                ma_engine_play_sound(&audioEngine, "../../data/banana.wav", NULL);
+                ma_engine_play_sound(&audioEngine, "../../data/audio_files/banana.wav", NULL);
             }
         }
 
