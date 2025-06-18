@@ -26,6 +26,7 @@ uniform mat4 projection;
 #define BUILDING 3
 #define DOME 4
 #define LEAF_04 5
+#define LEAF_07 6
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -38,8 +39,8 @@ uniform sampler2D TextureImage1;    // Gorilla
 uniform sampler2D TextureImage2;    // Grass
 uniform sampler2D TextureImage3;    // Banana
 uniform sampler2D TextureImage4;    // Domo
-uniform sampler2D TextureImage5;    // Leaf_04 Kd
-uniform sampler2D TextureImage6;    // Leaf_04 texture
+uniform sampler2D TextureImage5;    // Leaf_04 texture
+//uniform sampler2D TextureImage6;    // Leaf_07 texture
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -233,6 +234,13 @@ void main()
         V = texcoords.y;
         Kd0 = texture(TextureImage5, vec2(U,V)).rgb;
         texColor = texture(TextureImage5, vec2(U,V)).rgb;
+    }
+    else if ( object_id == LEAF_07 )
+    {
+        U = texcoords.x;
+        V = texcoords.y;
+        //Kd0 = texture(TextureImage6, vec2(U,V)).rgb;
+        //texColor = texture(TextureImage6, vec2(U,V)).rgb;
     }
     else
     {

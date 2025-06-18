@@ -157,6 +157,23 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
+glm::vec3 bezierCubic(float t,
+                      const glm::vec3& P0,
+                      const glm::vec3& P1,
+                      const glm::vec3& P2,
+                      const glm::vec3& P3)
+{
+    float u  = 1.0f - t;
+    float u2 = u*u;
+    float u3 = u2*u;
+    float t2 = t*t;
+    float t3 = t2*t;
+    return u3 * P0
+         + 3.0f * u2 * t * P1
+         + 3.0f * u * t2 * P2
+         +      t3      * P3;
+}
+
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
 struct SceneObject
@@ -297,6 +314,9 @@ int main(int argc, char* argv[])
     // Indicamos que as chamadas OpenGL deverão renderizar nesta janela
     glfwMakeContextCurrent(window);
 
+    // Esconder cursor e centralizá-lo (cursor não ta desaparecendo corretamente? Possível bug com WSL apenas)
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
     // Carregamento de todas funções definidas por OpenGL 3.3, utilizando a
     // biblioteca GLAD.
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
@@ -327,7 +347,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/texture_files/banana_texture.png"); // TextureImage3
     LoadTextureImage("../../data/texture_files/dome_texture.png"); // TextureImage4
     LoadTextureImage("../../data/texture_files/textures_V2/Leaves_04/Leaves_04_BaseColor.png"); // TextureImage5
-    LoadTextureImage("../../data/texture_files/textures_V2/Leaves_04/Leaves_04_BaseColor.png"); // TextureImage6
+    //LoadTextureImage("../../data/texture_files/textures_V2/Leaves_07/Leaves_07_BaseColor.png"); // TextureImage6
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     //ObjModel spheremodel("../../data/sphere.obj");
@@ -357,6 +377,10 @@ int main(int argc, char* argv[])
     ComputeNormals(&leaf4model);
     BuildTrianglesAndAddToVirtualScene(&leaf4model);
 
+    // ObjModel leaf7model("../../data/obj_files/3D_Leaf_07.obj");
+    // ComputeNormals(&leaf7model);
+    // BuildTrianglesAndAddToVirtualScene(&leaf7model);
+
     if ( argc > 1 )
     {
         ObjModel model(argv[1]);
@@ -380,6 +404,9 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Failed to initialize audio engine\n");
         std::exit(EXIT_FAILURE);
     }
+
+    float leafT = 0.0f;                 // nosso parâmetro t
+    const float leafDuration = 2.0f;
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     //LOOP
@@ -410,6 +437,9 @@ int main(int argc, char* argv[])
     
 
         glm::vec4 player_position;
+        float currentTime = (float)glfwGetTime();
+        float deltaTime = currentTime - g_LastFrameTime;
+        g_LastFrameTime = currentTime;
         if (g_UseLookAtCamera)
         {
             // Computamos a posição da câmera utilizando coordenadas esféricas.  As
@@ -423,7 +453,7 @@ int main(int argc, char* argv[])
 
              // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
             // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-            glm::vec4 camera_position_c  = glm::vec4(0.0f,0.1f,0.0f,1.0f) + delta_camera; // Ponto "c", centro da câmera
+            glm::vec4 camera_position_c  = glm::vec4(0.0f,0.2f,0.0f,1.0f) + delta_camera; // Ponto "c", centro da câmera
             glm::vec4 camera_lookat_l    = glm::vec4(x,y,z,1.0f) + delta_camera; // Ponto "l", para onde a câmera (look-at) estará sempre olhando
             glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
             glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
@@ -436,9 +466,9 @@ int main(int argc, char* argv[])
             u.y = 0.0f;
             w = w/norm(w);
             u = u/norm(u);
-            float currentTime = (float)glfwGetTime();
-            float deltaTime = currentTime - g_LastFrameTime;
-            g_LastFrameTime = currentTime;
+            // float currentTime = (float)glfwGetTime();
+            // float deltaTime = currentTime - g_LastFrameTime;
+            // g_LastFrameTime = currentTime;
 
             
             float speed = 2 * deltaTime;
@@ -471,7 +501,7 @@ int main(int argc, char* argv[])
 
              // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
             // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-            glm::vec4 camera_position_c  = glm::vec4(0.0f,0.0f,0.0f,1.0f) + delta_camera; // Ponto "c", centro da câmera
+            glm::vec4 camera_position_c  = glm::vec4(0.0f,0.2f,0.0f,1.0f) + delta_camera; // Ponto "c", centro da câmera
             glm::vec4 camera_lookat_l    = glm::vec4(x,y,z,1.0f) + delta_camera; // Ponto "l", para onde a câmera (look-at) estará sempre olhando
             glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
             glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
@@ -483,9 +513,9 @@ int main(int argc, char* argv[])
             w = w / norm(w);
             u = u / norm(u);
 
-            float currentTime = (float)glfwGetTime();
-            float deltaTime = currentTime - g_LastFrameTime;
-            g_LastFrameTime = currentTime;
+            // float currentTime = (float)glfwGetTime();
+            // float deltaTime = currentTime - g_LastFrameTime;
+            // g_LastFrameTime = currentTime;
 
 
             float speed = 2 * deltaTime;
@@ -550,6 +580,7 @@ int main(int argc, char* argv[])
         #define BUILDING 3
         #define DOME 4
         #define LEAF_04 5
+        #define LEAF_07 6
 
         // Desenhamos o modelo da esfera
         model = Matrix_Translate(-4.0f,0.5f,0.0f);
@@ -586,14 +617,44 @@ int main(int argc, char* argv[])
             DrawVirtualObject("banana");
         }
 
-        model = Matrix_Translate(-4.0f,1.5f,1.0f)
-                * Matrix_Scale(1.0f, 1.0f, 1.0f);
+        // Tentar encaixar curva de bezier cubica para simular a queda da folha
+        leafT += deltaTime / leafDuration; // Incrementa o parâmetro t
+        if (leafT > 1.0f) {
+            leafT = 0.0f; // Reseta t para repetir a animação
+        }
+        const glm::vec3 P0(-4.0f, 1.5f, 1.0f),
+                        P1(-5.0f, 0.75f,1.0f),
+                        P2(-3.0f, 0.75f,1.0f),
+                        P3(-4.0f, 0.0f, 1.0f);
+
+        glm::vec3 pos = bezierCubic(leafT, P0,P1,P2,P3);
+
+        model = Matrix_Translate(pos.x,pos.y,pos.z)
+                * Matrix_Scale(0.8f, 0.8f, 0.8f);
             //  * Matrix_Rotate_Z(0.6f)
             //  * Matrix_Rotate_X(0.2f)
             //  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, LEAF_04);
         DrawVirtualObject("Leaf_04");
+
+        // model = Matrix_Translate(-4.0f,1.5f,1.0f)
+        //         * Matrix_Scale(0.5f, 0.5f, 0.5f);
+        //     //  * Matrix_Rotate_Z(0.6f)
+        //     //  * Matrix_Rotate_X(0.2f)
+        //     //  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
+        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        // glUniform1i(g_object_id_uniform, LEAF_04);
+        // DrawVirtualObject("Leaf_04");
+
+        // model = Matrix_Translate(-4.0f,0.0185f,1.0f)
+        //         * Matrix_Scale(1.0f, 1.0f, 1.0f);
+        //     //  * Matrix_Rotate_Z(0.6f)
+        //     //  * Matrix_Rotate_X(0.2f)
+        //     //  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
+        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        // glUniform1i(g_object_id_uniform, LEAF_07);
+        // DrawVirtualObject("Leaf_07");
         
 
         // Desenhamos o modelo do coelho
@@ -854,7 +915,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage3"), 3);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage4"), 4);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage5"), 5);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage6"), 6);
+    //glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage6"), 6);
     glUseProgram(0);
 }
 
@@ -1324,15 +1385,15 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
     // parâmetros que definem a posição da câmera dentro da cena virtual.
     // Assim, temos que o usuário consegue controlar a câmera.
 
-    if (g_LeftMouseButtonPressed)
+    if (!g_LeftMouseButtonPressed)
     {
         // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
         float dx = xpos - g_LastCursorPosX;
         float dy = ypos - g_LastCursorPosY;
     
         // Atualizamos parâmetros da câmera com os deslocamentos
-        g_CameraTheta -= 0.01f*dx;
-        g_CameraPhi   += 0.01f*dy;
+        g_CameraTheta -= 0.003f*dx;
+        g_CameraPhi   += 0.003f*dy;
     
         // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
         float phimax = 3.141592f/2;
