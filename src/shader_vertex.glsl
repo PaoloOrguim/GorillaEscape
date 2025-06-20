@@ -20,6 +20,10 @@ out vec4 position_model;
 out vec4 normal;
 out vec2 texcoords;
 
+// BEGIN MODIFICATION: New output for skybox texture coordinates
+out vec3 texCoordsSkybox;
+// END MODIFICATION: New output for skybox texture coordinates
+
 void main()
 {
     // A variável gl_Position define a posição final de cada vértice
@@ -63,5 +67,7 @@ void main()
 
     // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
     texcoords = texture_coefficients;
+
+    texCoordsSkybox = (view * model * model_coefficients).xyz;
 }
 
