@@ -595,10 +595,14 @@ int main(int argc, char* argv[])
         #define SKYBOX_ID 7
 
         // BEGIN MODIFICATION: Draw the Skybox
-        // Remove translation from the view matrix for the skybox
-        glm::mat4 skybox_view = glm::mat4(glm::mat3(view));
-        // Use the identity matrix for model as the skybox is positioned relative to the camera
-        glm::mat4 skybox_model = Matrix_Identity();
+        // <eslgastal> The skybox exists in the world and is seen by
+        // the same camera as the other objects, so preserve the same
+        // view matrix.
+        glm::mat4 skybox_view = view;
+        // <eslgastal> Move the skybox with the camera/player, to give
+        // the illustion of being "at infinity."
+        glm::mat4 skybox_model =
+            Matrix_Translate(player_position.x, player_position.y, player_position.z);
 
         // Pass the modified view matrix (without translation) and identity model matrix to the shader
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(skybox_model));
