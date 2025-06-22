@@ -20,6 +20,10 @@ out vec4 position_model;
 out vec4 normal;
 out vec2 texcoords;
 
+// BEGIN MODIFICATION: New output for skybox texture coordinates
+out vec3 texCoordsSkybox;
+// END MODIFICATION: New output for skybox texture coordinates
+
 void main()
 {
     // A variável gl_Position define a posição final de cada vértice
@@ -63,5 +67,21 @@ void main()
 
     // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
     texcoords = texture_coefficients;
+
+    // <eslgastal> When using the `texture(...)` function in GLSL with
+    // a `samplerCube` texture, the function reads from the cube map
+    // texture by interpreting the lookup coordinate as a 3D direction
+    // vector, not as a direct 2D UV coordinate for a single face.
+    //
+    // This direction vector should point from the center of the
+    // "environment cube" (that surrounds the scene), towards the
+    // desired point on the cube.
+    //
+    // Since in file:main.cpp we centered the cube on the camera, we
+    // can compute the direction vector for each cube vertex by
+    // subtracting the vertex location from the camera position.
+    vec4 origin = vec4(0.0, 0.0, 0.0, 1.0);
+    vec4 camera_position = inverse(view) * origin;
+    texCoordsSkybox = (position_world - camera_position).xyz;
 }
 

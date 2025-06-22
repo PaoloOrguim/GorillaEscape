@@ -13,6 +13,10 @@ in vec4 position_model;
 // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
 in vec2 texcoords;
 
+// BEGIN MODIFICATION: Input for skybox texture coordinates
+in vec3 texCoordsSkybox;
+// END MODIFICATION: Input for skybox texture coordinates
+
 
 // Matrizes computadas no código C++ e enviadas para a GPU
 uniform mat4 model;
@@ -27,6 +31,7 @@ uniform mat4 projection;
 #define DOME 4
 #define LEAF_04 5
 #define LEAF_07 6
+#define SKYBOX_ID 7
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -40,6 +45,9 @@ uniform sampler2D TextureImage2;    // Grass
 uniform sampler2D TextureImage3;    // Banana
 uniform sampler2D TextureImage4;    // Domo
 uniform sampler2D TextureImage5;    // Leaf_04 texture
+// BEGIN MODIFICATION: New uniform for cubemap texture
+uniform samplerCube TextureImage6; // Skybox cubemap texture
+// END MODIFICATION: New uniform for cubemap texture
 //uniform sampler2D TextureImage6;    // Leaf_07 texture
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
@@ -51,6 +59,11 @@ out vec4 color;
 
 void main()
 {
+    if (object_id == SKYBOX_ID) // Using the SKYBOX_ID defined in main.cpp
+    {
+        color = texture(TextureImage6, texCoordsSkybox);
+        return; // Early exit for skybox to avoid other lighting calculations
+    }
     // Obtemos a posição da câmera utilizando a inversa da matriz que define o
     // sistema de coordenadas da câmera.
     vec4 origin = vec4(0.0, 0.0, 0.0, 1.0);

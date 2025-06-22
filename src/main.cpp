@@ -157,6 +157,8 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
+
+void LoadCubemapTextures(const std::vector<std::string>& filenames);
 glm::vec3 bezierCubic(float t,
                       const glm::vec3& P0,
                       const glm::vec3& P1,
@@ -348,6 +350,15 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/texture_files/dome_texture.png"); // TextureImage4
     LoadTextureImage("../../data/texture_files/textures_V2/Leaves_04/Leaves_04_BaseColor.png"); // TextureImage5
     //LoadTextureImage("../../data/texture_files/textures_V2/Leaves_07/Leaves_07_BaseColor.png"); // TextureImage6
+
+    LoadCubemapTextures({
+        "../../data/texture_files/posx.jpg", // +X
+        "../../data/texture_files/negx.jpg",  // -X
+        "../../data/texture_files/posy.jpg",   // +Y
+        "../../data/texture_files/negy.jpg",// -Y
+        "../../data/texture_files/posz.jpg", // +Z
+        "../../data/texture_files/negz.jpg"   // -Z
+    });
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     //ObjModel spheremodel("../../data/sphere.obj");
@@ -581,6 +592,34 @@ int main(int argc, char* argv[])
         #define DOME 4
         #define LEAF_04 5
         #define LEAF_07 6
+        #define SKYBOX_ID 7
+
+        // BEGIN MODIFICATION: Draw the Skybox
+        // <eslgastal> The skybox exists in the world and is seen by
+        // the same camera as the other objects, so preserve the same
+        // view matrix.
+        glm::mat4 skybox_view = view;
+        // <eslgastal> Move the skybox with the camera/player, to give
+        // the illustion of being "at infinity."
+        glm::mat4 skybox_model =
+            Matrix_Translate(player_position.x, player_position.y, player_position.z);
+
+        // Pass the modified view matrix (without translation) and identity model matrix to the shader
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(skybox_model));
+        glUniformMatrix4fv(g_view_uniform, 1 , GL_FALSE , glm::value_ptr(skybox_view));
+        glUniformMatrix4fv(g_projection_uniform, 1 , GL_FALSE , glm::value_ptr(projection));
+
+        glUniform1i(g_object_id_uniform, SKYBOX_ID); // Set the skybox ID
+
+        // Disable depth writing so the skybox is always drawn behind other objects
+        glDepthMask(GL_FALSE);
+        DrawVirtualObject("skybox"); // Draw the skybox
+        glDepthMask(GL_TRUE); // Re-enable depth writing
+
+        // Restore the original view and projection matrices for other objects
+        glUniformMatrix4fv(g_view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
+        glUniformMatrix4fv(g_projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
+        // END MODIFICATION: Draw the Skybox
 
         // Desenhamos o modelo da esfera
         model = Matrix_Translate(-4.0f,0.5f,0.0f);
@@ -736,11 +775,11 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
-        model = Matrix_Translate(0.0f,9.0f,0.0f)
-              * Matrix_Scale(1.75f, 1.75f, 1.75f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, DOME);
-        DrawVirtualObject("skybox");
+        //model = Matrix_Translate(0.0f,9.0f,0.0f)
+        //      * Matrix_Scale(1.75f, 1.75f, 1.75f);
+        //glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        //glUniform1i(g_object_id_uniform, DOME);
+        //DrawVirtualObject("skybox");
 
 
 
@@ -915,6 +954,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage3"), 3);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage4"), 4);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage5"), 5);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage6"), 6);
     //glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage6"), 6);
     glUseProgram(0);
 }
@@ -1893,6 +1933,48 @@ void PrintObjModelInfo(ObjModel* model)
     printf("\n");
   }
 }
+
+// BEGIN MODIFICATION: New function to load cubemap textures
+void LoadCubemapTextures(const std::vector<std::string>& filenames)
+{
+    printf("Carregando texturas de cubemap... \n");
+
+    GLuint texture_id;
+    glGenTextures(1, &texture_id);
+    glActiveTexture(GL_TEXTURE0 + 6); // Use a new texture unit, e.g., GL_TEXTURE0 + 6 for TextureImage6
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+
+    stbi_set_flip_vertically_on_load(false); // Cubemaps should not be flipped
+
+    for (unsigned int i = 0; i < filenames.size(); i++)
+    {
+        int width, height, channels;
+        unsigned char *data = stbi_load(filenames[i].c_str(), &width, &height, &channels, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                         0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+            );
+            printf("OK (%dx%d) - %s.\n", width, height, filenames[i].c_str());
+            stbi_image_free(data);
+        }
+        else
+        {
+            fprintf(stderr, "ERROR: Failed to load cubemap image \"%s\".\n", filenames[i].c_str());
+            std::exit(EXIT_FAILURE);
+        }
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); // For 3D textures
+
+    g_NumLoadedTextures += 1; // Increment counter for newly loaded texture
+    printf("Texturas de cubemap carregadas com sucesso!\n");
+}
+// END MODIFICATION: New function to load cubemap textures
 
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :
