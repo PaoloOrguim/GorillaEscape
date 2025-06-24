@@ -506,10 +506,13 @@ int main(int argc, char* argv[])
             // This is a simple line segment from the banana to the gorilla, which we can
             // use to check if the player is crossing it.
             // We can do this because we assume every wall will be perpendicular to the ground, so we can use a 2D line segment in the XZ plane.
-            glm::vec2 lineStart = glm::vec2(-4.0f, 1.0f);   // Banana position
-            glm::vec2 lineEnd = glm::vec2(-4.0f, 0.0f);     // Gorilla position
-            bool crossing = collisionCheckCircleLine(lineStart, lineEnd, glm::vec2(candidate_pos.x, candidate_pos.z));
-            if (!crossing) {
+            glm::vec2 lineStart = glm::vec2(-4.0f + 2.34, 2.8f);    // First outside wall
+            glm::vec2 lineEnd = glm::vec2(-4.0f + 2.34, -2.8f);
+            glm::vec2 lineStart2 = glm::vec2(-1.66f, 2.95f);    // Second outside wall
+            glm::vec2 lineEnd2 = glm::vec2(-1.0f, 2.95f);
+            bool crossing2 = collisionCheckCircleLine(lineStart2, lineEnd2, glm::vec2(candidate_pos.x, candidate_pos.z));
+            bool crossing1 = collisionCheckCircleLine(lineStart, lineEnd, glm::vec2(candidate_pos.x, candidate_pos.z));
+            if (!crossing1 && !crossing2) {
                 // If the camera is not crossing the line, we can move
                 delta_camera = new_delta;
             }
@@ -1544,11 +1547,12 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     //   Se apertar tecla Z       então g_AngleZ += delta;
     //   Se apertar tecla shift+Z então g_AngleZ -= delta;
 
-    float delta = 3.141592 / 16; // 22.5 graus, em radianos.
+    float delta = 0.01; // 22.5 graus, em radianos.
 
     if (key == GLFW_KEY_X && action == GLFW_PRESS)
     {
         g_AngleX += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
+        printf("g_AngleX = %.2f\n", g_AngleX);
     }
 
     if (key == GLFW_KEY_Y && action == GLFW_PRESS)
@@ -1558,6 +1562,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_Z && action == GLFW_PRESS)
     {
         g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
+        printf("g_AngleZ = %.2f\n", g_AngleZ);
     }
 
     // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.
