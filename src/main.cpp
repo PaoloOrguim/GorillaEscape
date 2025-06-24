@@ -419,6 +419,8 @@ int main(int argc, char* argv[])
     float leafT = 0.0f;                 // nosso parâmetro t
     const float leafDuration = 2.0f;
 
+    glm::vec4 player_position = glm::vec4(0.0f,0.2f,0.0f,1.0f);
+
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     //LOOP
     while (!glfwWindowShouldClose(window))
@@ -447,7 +449,6 @@ int main(int argc, char* argv[])
         glm::mat4 view;
     
 
-        glm::vec4 player_position;
         float currentTime = (float)glfwGetTime();
         float deltaTime = currentTime - g_LastFrameTime;
         g_LastFrameTime = currentTime;
@@ -481,20 +482,38 @@ int main(int argc, char* argv[])
             // float deltaTime = currentTime - g_LastFrameTime;
             // g_LastFrameTime = currentTime;
 
-            
+            glm::vec4 old_delta = delta_camera;
+            glm::vec4 movement = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
             float speed = 2 * deltaTime;
             if(g_WPressed){
-                delta_camera-= w*speed;
+                movement-= w*speed;
             }
             if(g_APressed){
-                delta_camera -= u*speed;
+                movement -= u*speed;
             }
             if(g_DPressed){
-                delta_camera += u*speed;
+                movement += u*speed;
             }
             if(g_SPressed){
-                delta_camera += w*speed;
+                movement += w*speed;
             }
+
+            glm::vec4 new_delta = old_delta + movement;
+            glm::vec4 candidate_pos = glm::vec4(0.0f, 0.2f, 0.0f, 1.0f) + new_delta;
+
+
+            // We determine a wall between the banana and the gorilla, so we can check if the player is crossing it
+            // This is a simple line segment from the banana to the gorilla, which we can
+            // use to check if the player is crossing it.
+            // We can do this because we assume every wall will be perpendicular to the ground, so we can use a 2D line segment in the XZ plane.
+            glm::vec2 lineStart = glm::vec2(-4.0f, 1.0f);   // Banana position
+            glm::vec2 lineEnd = glm::vec2(-4.0f, 0.0f);     // Gorilla position
+            bool crossing = collisionCheckCircleLine(lineStart, lineEnd, glm::vec2(candidate_pos.x, candidate_pos.z));
+            if (!crossing) {
+                // If the camera is not crossing the line, we can move
+                delta_camera = new_delta;
+            }
+
 
             view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
             player_position = camera_position_c;

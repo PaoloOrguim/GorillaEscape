@@ -9,4 +9,22 @@ bool collisionCheckBoxSphere(
     float sphereRadius
 );
 
+// bool pointCircle(
+//     const glm::vec2& point,
+//     const glm::vec2& circleCenter,
+//     float circleRadius
+// );
+
+// bool linePoint(
+//     const glm::vec2& lineStart,
+//     const glm::vec2& lineEnd,
+//     const glm::vec2& point
+// );
+
+bool collisionCheckCircleLine(
+    const glm::vec2& lineStart,
+    const glm::vec2& lineEnd,
+    const glm::vec2& circleCenter
+);
+
 #endif // COLLISIONS_H
