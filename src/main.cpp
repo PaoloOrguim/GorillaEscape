@@ -392,6 +392,10 @@ int main(int argc, char* argv[])
     // ComputeNormals(&leaf7model);
     // BuildTrianglesAndAddToVirtualScene(&leaf7model);
 
+    ObjModel cylindermodel("../../data/obj_files/cylinder.obj");
+    ComputeNormals(&cylindermodel);
+    BuildTrianglesAndAddToVirtualScene(&cylindermodel);
+
     if ( argc > 1 )
     {
         ObjModel model(argv[1]);
@@ -506,13 +510,31 @@ int main(int argc, char* argv[])
             // This is a simple line segment from the banana to the gorilla, which we can
             // use to check if the player is crossing it.
             // We can do this because we assume every wall will be perpendicular to the ground, so we can use a 2D line segment in the XZ plane.
-            glm::vec2 lineStart = glm::vec2(-4.0f + 2.34, 2.8f);    // First outside wall
-            glm::vec2 lineEnd = glm::vec2(-4.0f + 2.34, -2.8f);
-            glm::vec2 lineStart2 = glm::vec2(-1.66f, 2.95f);    // Second outside wall
-            glm::vec2 lineEnd2 = glm::vec2(-1.0f, 2.95f);
+            glm::vec2 lineStart1 = glm::vec2(-1.75f, 2.98f);    // First outside wall
+            glm::vec2 lineEnd1 = glm::vec2(-0.89f, 3.00f);
+
+            glm::vec2 lineStart2 = glm::vec2(-1.75f, 2.98f);    // Second outside wall
+            glm::vec2 lineEnd2 = glm::vec2(-1.76f, -3.68f);
+
+            glm::vec2 lineStart3 = glm::vec2(-1.76f, -3.68f);    // Third outside wall
+            glm::vec2 lineEnd3 = glm::vec2(-0.89f, -3.68f);
+
+            glm::vec2 lineStart4 = glm::vec2(-0.44f, -3.67f);    // Fourth outside wall
+            glm::vec2 lineEnd4 = glm::vec2(0.44f, -3.67f);
+
+            glm::vec2 lineStart5 = glm::vec2(0.44f, -3.67f);    // Fifth outside wall
+            glm::vec2 lineEnd5 = glm::vec2(0.44f, 3.00f);
+
+            glm::vec2 lineStart6 = glm::vec2(0.44f, 3.00f);    // Sixth outside wall
+            glm::vec2 lineEnd6 = glm::vec2(-0.44f, 3.00f);
+
+            bool crossing1 = collisionCheckCircleLine(lineStart1, lineEnd1, glm::vec2(candidate_pos.x, candidate_pos.z));
             bool crossing2 = collisionCheckCircleLine(lineStart2, lineEnd2, glm::vec2(candidate_pos.x, candidate_pos.z));
-            bool crossing1 = collisionCheckCircleLine(lineStart, lineEnd, glm::vec2(candidate_pos.x, candidate_pos.z));
-            if (!crossing1 && !crossing2) {
+            bool crossing3 = collisionCheckCircleLine(lineStart3, lineEnd3, glm::vec2(candidate_pos.x, candidate_pos.z));
+            bool crossing4 = collisionCheckCircleLine(lineStart4, lineEnd4, glm::vec2(candidate_pos.x, candidate_pos.z));
+            bool crossing5 = collisionCheckCircleLine(lineStart5, lineEnd5, glm::vec2(candidate_pos.x, candidate_pos.z));
+            bool crossing6 = collisionCheckCircleLine(lineStart6, lineEnd6, glm::vec2(candidate_pos.x, candidate_pos.z));
+            if (!crossing1 && !crossing2 && !crossing3 && !crossing4 && !crossing5 && !crossing6) {
                 // If the camera is not crossing the line, we can move
                 delta_camera = new_delta;
             }
@@ -615,6 +637,7 @@ int main(int argc, char* argv[])
         #define LEAF_04 5
         #define LEAF_07 6
         #define SKYBOX_ID 7
+        #define CYLINDER 8
 
         // BEGIN MODIFICATION: Draw the Skybox
         // <eslgastal> The skybox exists in the world and is seen by
@@ -797,11 +820,12 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
-        //model = Matrix_Translate(0.0f,9.0f,0.0f)
-        //      * Matrix_Scale(1.75f, 1.75f, 1.75f);
-        //glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        //glUniform1i(g_object_id_uniform, DOME);
-        //DrawVirtualObject("skybox");
+        model = Matrix_Translate(g_AngleX,0.0f,g_AngleZ)
+              * Matrix_Scale(0.01f, 1.0f, 0.01f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, CYLINDER);
+        DrawVirtualObject("cylinder");
+
 
 
 
@@ -1525,6 +1549,7 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 
 // Definição da função que será chamada sempre que o usuário pressionar alguma
 // tecla do teclado. Veja http://www.glfw.org/docs/latest/input_guide.html#input_key
+float delta = 0.1f;
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 {
     // ======================
@@ -1547,22 +1572,24 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     //   Se apertar tecla Z       então g_AngleZ += delta;
     //   Se apertar tecla shift+Z então g_AngleZ -= delta;
 
-    float delta = 0.01; // 22.5 graus, em radianos.
+    //float delta = 0.01; // 22.5 graus, em radianos.
 
     if (key == GLFW_KEY_X && action == GLFW_PRESS)
     {
         g_AngleX += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-        printf("g_AngleX = %.2f\n", g_AngleX);
+        printf("X: %.2f; Z: %.2f\n", g_AngleX, g_AngleZ);
     }
 
     if (key == GLFW_KEY_Y && action == GLFW_PRESS)
     {
-        g_AngleY += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
+        //g_AngleY += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
+        delta = (mod & GLFW_MOD_SHIFT) ? 0.1f : 0.01f;
+        printf("delta = %.2f\n", delta);
     }
     if (key == GLFW_KEY_Z && action == GLFW_PRESS)
     {
         g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-        printf("g_AngleZ = %.2f\n", g_AngleZ);
+        printf("X: %.2f; Z: %.2f\n", g_AngleX, g_AngleZ);
     }
 
     // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.

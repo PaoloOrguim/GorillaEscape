@@ -42,7 +42,7 @@ bool collisionCheckCircleLine(
     const glm::vec2& lineEnd,
     const glm::vec2& circleCenter
 ) {
-    float circleRadius = 0.2f;
+    float circleRadius = 0.1f;
     glm::vec2 AB = lineEnd   - lineStart;
     glm::vec2 AC = circleCenter - lineStart;
 
