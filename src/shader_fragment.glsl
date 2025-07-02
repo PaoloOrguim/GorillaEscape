@@ -50,6 +50,8 @@ uniform samplerCube TextureImage6; // Skybox cubemap texture
 // END MODIFICATION: New uniform for cubemap texture
 //uniform sampler2D TextureImage6;    // Leaf_07 texture
 
+uniform int lantern_on;
+
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
 
@@ -275,11 +277,19 @@ void main()
 
     //testes lanterna nova inicio
 
-    vec3 diffuse  = (Kd0 * lambert0) * spotFactor0
-                  + (Kd0 * lambert0) * spotFactor1
-                  + (Kd0 * lambert0) * spotFactor2
-                  + (Kd0 * lambert0) * spotFactor3
-                  + (Kd0 * lambert0) * spotFactor4;
+    vec3 diffuse;
+    if(lantern_on > 0)
+    {
+        diffuse  = (Kd0 * lambert0) * spotFactor0
+                        + (Kd0 * lambert0) * spotFactor1
+                        + (Kd0 * lambert0) * spotFactor2
+                        + (Kd0 * lambert0) * spotFactor3
+                        + (Kd0 * lambert0) * spotFactor4;
+    }
+    else
+    {
+        diffuse  = vec3(0.0, 0.0, 0.0);
+    }
 
     //testes lanterna nova fim
 

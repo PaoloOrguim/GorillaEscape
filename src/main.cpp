@@ -231,6 +231,9 @@ float g_deltaTime;
 bool g_IsFullscreen = false;
 GLFWmonitor* g_CurrentMonitor = nullptr;
 
+bool g_LanternOn = true;
+
+
 
 
 
@@ -269,6 +272,7 @@ GLint g_projection_uniform;
 GLint g_object_id_uniform;
 GLint g_bbox_min_uniform;
 GLint g_bbox_max_uniform;
+GLint g_lantern_uniform;
 
 // Número de texturas carregadas pela função LoadTextureImage()
 GLuint g_NumLoadedTextures = 0;
@@ -630,12 +634,15 @@ int main(int argc, char* argv[])
 
         glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
 
+        
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
         // efetivamente aplicadas em todos os pontos.
         glUniformMatrix4fv(g_view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(g_projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
+        glUniform1i(g_lantern_uniform, g_LanternOn ? 1 : 0);
+        
         #define BANANA 0
         #define GORILLA  1
         #define PLANE  2
@@ -998,6 +1005,7 @@ void LoadShadersFromFiles()
     g_object_id_uniform  = glGetUniformLocation(g_GpuProgramID, "object_id"); // Variável "object_id" em shader_fragment.glsl
     g_bbox_min_uniform   = glGetUniformLocation(g_GpuProgramID, "bbox_min");
     g_bbox_max_uniform   = glGetUniformLocation(g_GpuProgramID, "bbox_max");
+    g_lantern_uniform = glGetUniformLocation(g_GpuProgramID, "lantern_on");
 
     // Variáveis em "shader_fragment.glsl" para acesso das imagens de textura
     glUseProgram(g_GpuProgramID);
@@ -1689,7 +1697,14 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     }
 
     if (key == GLFW_KEY_F11 && action == GLFW_PRESS)
-            ToggleFullscreen(window, g_CurrentMonitor, g_IsFullscreen);
+    {
+        ToggleFullscreen(window, g_CurrentMonitor, g_IsFullscreen);
+    }
+
+    if (key == GLFW_KEY_F && action == GLFW_PRESS)
+    {
+        g_LanternOn = !g_LanternOn;
+    }
 }
 
 // Definimos o callback para impressão de erros da GLFW no terminal
