@@ -226,6 +226,13 @@ bool bananaCollected = false;
 
 float g_LastFrameTime = 0.0f;
 
+float g_deltaTime;
+
+bool g_IsFullscreen = false;
+GLFWmonitor* g_CurrentMonitor = nullptr;
+
+
+
 
 glm::vec4 delta_camera = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f); // Ponto "c", centro da câmera
 
@@ -454,7 +461,7 @@ int main(int argc, char* argv[])
     
 
         float currentTime = (float)glfwGetTime();
-        float deltaTime = currentTime - g_LastFrameTime;
+        g_deltaTime = currentTime - g_LastFrameTime;
         g_LastFrameTime = currentTime;
         if (g_UseLookAtCamera)
         {
@@ -488,7 +495,7 @@ int main(int argc, char* argv[])
 
             glm::vec4 old_delta = delta_camera;
             glm::vec4 movement = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-            float speed = 2 * deltaTime;
+            float speed = 2 * g_deltaTime;
             if(g_WPressed){
                 movement-= w*speed;
             }
@@ -573,7 +580,7 @@ int main(int argc, char* argv[])
             // g_LastFrameTime = currentTime;
 
 
-            float speed = 2 * deltaTime;
+            float speed = 2 * g_deltaTime;
             if(g_WPressed){
                 delta_camera-= w*speed;
             }
@@ -702,7 +709,7 @@ int main(int argc, char* argv[])
         }
 
         // Tentar encaixar curva de bezier cubica para simular a queda da folha
-        leafT += deltaTime / leafDuration; // Incrementa o parâmetro t
+        leafT += g_deltaTime / leafDuration; // Incrementa o parâmetro t
         if (leafT > 1.0f) {
             leafT = 0.0f; // Reseta t para repetir a animação
         }
@@ -1470,63 +1477,63 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
     // instante de tempo, e usamos esta movimentação para atualizar os
     // parâmetros que definem a posição da câmera dentro da cena virtual.
     // Assim, temos que o usuário consegue controlar a câmera.
-
-    if (!g_LeftMouseButtonPressed)
+    static bool firstMouse = true;
+    if (firstMouse)
     {
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
-        float dy = ypos - g_LastCursorPosY;
-    
-        // Atualizamos parâmetros da câmera com os deslocamentos
-        g_CameraTheta -= 0.003f*dx;
-        g_CameraPhi   += 0.003f*dy;
-    
-        // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
-        float phimax = 3.141592f/2;
-        float phimin = -phimax;
-    
-        if (g_CameraPhi > phimax)
-            g_CameraPhi = phimax;
-    
-        if (g_CameraPhi < phimin)
-            g_CameraPhi = phimin;
-    
-        // Atualizamos as variáveis globais para armazenar a posição atual do
-        // cursor como sendo a última posição conhecida do cursor.
         g_LastCursorPosX = xpos;
         g_LastCursorPosY = ypos;
+        firstMouse = false;
+        return;
     }
+    
+    // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
+    float dx = xpos - g_LastCursorPosX;
+    float dy = ypos - g_LastCursorPosY;
 
-    if (g_RightMouseButtonPressed)
+    // Atualizamos parâmetros da câmera com os deslocamentos
+    g_CameraTheta -= 0.3f*dx* g_deltaTime;
+    g_CameraPhi   += 0.3f*dy* g_deltaTime;
+
+    // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
+    float phimax = 3.141592f/2;
+    float phimin = -phimax;
+
+    if (g_CameraPhi > phimax)
+        g_CameraPhi = phimax;
+
+    if (g_CameraPhi < phimin)
+        g_CameraPhi = phimin;
+
+    // Atualizamos as variáveis globais para armazenar a posição atual do
+    // cursor como sendo a última posição conhecida do cursor.
+    g_LastCursorPosX = xpos;
+    g_LastCursorPosY = ypos;
+    
+}
+
+void ToggleFullscreen(GLFWwindow*& window, GLFWmonitor*& monitor, bool& isFullscreen)
+{
+    static int windowPosX, windowPosY, windowWidth, windowHeight;
+
+    if (!isFullscreen)
     {
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
-        float dy = ypos - g_LastCursorPosY;
-    
-        // Atualizamos parâmetros da antebraço com os deslocamentos
-        g_ForearmAngleZ -= 0.01f*dx;
-        g_ForearmAngleX += 0.01f*dy;
-    
-        // Atualizamos as variáveis globais para armazenar a posição atual do
-        // cursor como sendo a última posição conhecida do cursor.
-        g_LastCursorPosX = xpos;
-        g_LastCursorPosY = ypos;
+        // Salvar posição e tamanho atuais da janela
+        glfwGetWindowPos(window, &windowPosX, &windowPosY);
+        glfwGetWindowSize(window, &windowWidth, &windowHeight);
+
+        // Pegar monitor primário e seu modo de vídeo
+        monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+        // Mudar para fullscreen
+        glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+        isFullscreen = true;
     }
-
-    if (g_MiddleMouseButtonPressed)
+    else
     {
-        // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
-        float dx = xpos - g_LastCursorPosX;
-        float dy = ypos - g_LastCursorPosY;
-    
-        // Atualizamos parâmetros da antebraço com os deslocamentos
-        g_TorsoPositionX += 0.01f*dx;
-        g_TorsoPositionY -= 0.01f*dy;
-    
-        // Atualizamos as variáveis globais para armazenar a posição atual do
-        // cursor como sendo a última posição conhecida do cursor.
-        g_LastCursorPosX = xpos;
-        g_LastCursorPosY = ypos;
+        // Voltar ao modo janela
+        glfwSetWindowMonitor(window, nullptr, windowPosX, windowPosY, windowWidth, windowHeight, 0);
+        isFullscreen = false;
     }
 }
 
@@ -1680,6 +1687,9 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         fprintf(stdout,"Shaders recarregados!\n");
         fflush(stdout);
     }
+
+    if (key == GLFW_KEY_F11 && action == GLFW_PRESS)
+            ToggleFullscreen(window, g_CurrentMonitor, g_IsFullscreen);
 }
 
 // Definimos o callback para impressão de erros da GLFW no terminal
