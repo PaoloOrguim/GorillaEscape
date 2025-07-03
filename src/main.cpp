@@ -157,6 +157,8 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
+void drawDoor(glm::mat4 model, int index);
+
 
 void LoadCubemapTextures(const std::vector<std::string>& filenames);
 glm::vec3 bezierCubic(float t,
@@ -222,6 +224,8 @@ bool g_SPressed = false;
 bool g_DPressed = false;
 bool g_EPressed = false;
 
+bool g_SHIFTPressed = false;
+
 bool bananaCollected = false;
 
 float g_LastFrameTime = 0.0f;
@@ -233,7 +237,15 @@ GLFWmonitor* g_CurrentMonitor = nullptr;
 
 bool g_LanternOn = true;
 
+bool g_doorAnimationOnGoing = false;
 
+struct DoorStatus
+{
+    bool isOpen = false;
+    bool animationOnGoing = false;
+    float doorOffset = 0.0f;
+};
+DoorStatus g_doorStatus[10];
 
 
 
@@ -369,8 +381,8 @@ int main(int argc, char* argv[])
         "../../data/texture_files/negy.jpg",// -Y
         "../../data/texture_files/posz.jpg", // +Z
         "../../data/texture_files/negz.jpg"   // -Z
-    });
-
+    }); //TextureImage6
+     LoadTextureImage("../../data/texture_files/DoorUV.png"); // TextureImage7
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     //ObjModel spheremodel("../../data/sphere.obj");
     ObjModel gorillamodel("../../data/obj_files/gorilla.obj");
@@ -406,6 +418,10 @@ int main(int argc, char* argv[])
     ObjModel cylindermodel("../../data/obj_files/cylinder.obj");
     ComputeNormals(&cylindermodel);
     BuildTrianglesAndAddToVirtualScene(&cylindermodel);
+
+    ObjModel doormodel("../../data/obj_files/door.obj");
+    ComputeNormals(&doormodel);
+    BuildTrianglesAndAddToVirtualScene(&doormodel);
 
     if ( argc > 1 )
     {
@@ -467,27 +483,27 @@ int main(int argc, char* argv[])
         float currentTime = (float)glfwGetTime();
         g_deltaTime = currentTime - g_LastFrameTime;
         g_LastFrameTime = currentTime;
+
+        // Computamos a posição da câmera utilizando coordenadas esféricas.  As
+        // variáveis g_CameraDistance, g_CameraPhi, e g_CameraTheta são
+        // controladas pelo mouse do usuário. Veja as funções CursorPosCallback()
+        // e ScrollCallback().
+        float r = g_CameraDistance;
+        float y = r*-sin(g_CameraPhi);
+        float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
+        float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
+
+            // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
+        // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
+        glm::vec4 camera_position_c  = glm::vec4(0.0f,0.5f,0.0f,1.0f) + delta_camera; // Ponto "c", centro da câmera
+        glm::vec4 camera_lookat_l    = glm::vec4(x,y,z,1.0f) + delta_camera; // Ponto "l", para onde a câmera (look-at) estará sempre olhando
+        glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
+        glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
+
+        glm::vec4 w = -camera_view_vector;
+        glm::vec4 u = crossproduct(camera_up_vector,w);
         if (g_UseLookAtCamera)
         {
-            // Computamos a posição da câmera utilizando coordenadas esféricas.  As
-            // variáveis g_CameraDistance, g_CameraPhi, e g_CameraTheta são
-            // controladas pelo mouse do usuário. Veja as funções CursorPosCallback()
-            // e ScrollCallback().
-            float r = g_CameraDistance;
-            float y = r*-sin(g_CameraPhi);
-            float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
-            float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
-
-             // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
-            // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-            glm::vec4 camera_position_c  = glm::vec4(0.0f,0.2f,0.0f,1.0f) + delta_camera; // Ponto "c", centro da câmera
-            glm::vec4 camera_lookat_l    = glm::vec4(x,y,z,1.0f) + delta_camera; // Ponto "l", para onde a câmera (look-at) estará sempre olhando
-            glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
-            glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
-
-            glm::vec4 w = -camera_view_vector;
-            glm::vec4 u = crossproduct(camera_up_vector,w);
-    
             // Normalizamos os vetores u e w            
             w.y = 0.0f;
             u.y = 0.0f;
@@ -499,18 +515,29 @@ int main(int argc, char* argv[])
 
             glm::vec4 old_delta = delta_camera;
             glm::vec4 movement = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-            float speed = 2 * g_deltaTime;
+            float speed = 2.5 * g_deltaTime;
+            float bonus_speed = 1.5;
             if(g_WPressed){
-                movement-= w*speed;
+                movement-= w;
             }
             if(g_APressed){
-                movement -= u*speed;
+                movement -= u;
             }
             if(g_DPressed){
-                movement += u*speed;
+                movement += u;
             }
             if(g_SPressed){
-                movement += w*speed;
+                movement += w;
+            }
+
+            //normalizando vetor de movimento para nao acelerar nas diagonais
+            if(norm(movement)!=0)
+            {
+                movement = speed*movement/norm(movement);
+                if(g_SHIFTPressed)
+                {
+                    movement *= bonus_speed;
+                }
             }
 
             glm::vec4 new_delta = old_delta + movement;
@@ -539,12 +566,19 @@ int main(int argc, char* argv[])
             glm::vec2 lineStart6 = glm::vec2(0.44f, 3.00f);    // Sixth outside wall
             glm::vec2 lineEnd6 = glm::vec2(-0.44f, 3.00f);
 
-            bool crossing1 = collisionCheckCircleLine(lineStart1, lineEnd1, glm::vec2(candidate_pos.x, candidate_pos.z));
-            bool crossing2 = collisionCheckCircleLine(lineStart2, lineEnd2, glm::vec2(candidate_pos.x, candidate_pos.z));
-            bool crossing3 = collisionCheckCircleLine(lineStart3, lineEnd3, glm::vec2(candidate_pos.x, candidate_pos.z));
-            bool crossing4 = collisionCheckCircleLine(lineStart4, lineEnd4, glm::vec2(candidate_pos.x, candidate_pos.z));
-            bool crossing5 = collisionCheckCircleLine(lineStart5, lineEnd5, glm::vec2(candidate_pos.x, candidate_pos.z));
-            bool crossing6 = collisionCheckCircleLine(lineStart6, lineEnd6, glm::vec2(candidate_pos.x, candidate_pos.z));
+            // bool crossing1 = collisionCheckCircleLine(lineStart1, lineEnd1, glm::vec2(candidate_pos.x, candidate_pos.z));
+            // bool crossing2 = collisionCheckCircleLine(lineStart2, lineEnd2, glm::vec2(candidate_pos.x, candidate_pos.z));
+            // bool crossing3 = collisionCheckCircleLine(lineStart3, lineEnd3, glm::vec2(candidate_pos.x, candidate_pos.z));
+            // bool crossing4 = collisionCheckCircleLine(lineStart4, lineEnd4, glm::vec2(candidate_pos.x, candidate_pos.z));
+            // bool crossing5 = collisionCheckCircleLine(lineStart5, lineEnd5, glm::vec2(candidate_pos.x, candidate_pos.z));
+            // bool crossing6 = collisionCheckCircleLine(lineStart6, lineEnd6, glm::vec2(candidate_pos.x, candidate_pos.z));
+
+            bool crossing1 = false;
+            bool crossing2 = false;
+            bool crossing3 = false;
+            bool crossing4 = false;
+            bool crossing5 = false;
+            bool crossing6 = false;
             if (!crossing1 && !crossing2 && !crossing3 && !crossing4 && !crossing5 && !crossing6) {
                 // If the camera is not crossing the line, we can move
                 delta_camera = new_delta;
@@ -556,25 +590,6 @@ int main(int argc, char* argv[])
         }
         else
         {
-            // Computamos a posição da câmera utilizando coordenadas esféricas.  As
-            // variáveis g_CameraDistance, g_CameraPhi, e g_CameraTheta são
-            // controladas pelo mouse do usuário. Veja as funções CursorPosCallback()
-            // e ScrollCallback().
-            float r = g_CameraDistance;
-            float y = r*-sin(g_CameraPhi);
-            float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
-            float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
-
-             // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
-            // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-            glm::vec4 camera_position_c  = glm::vec4(0.0f,0.2f,0.0f,1.0f) + delta_camera; // Ponto "c", centro da câmera
-            glm::vec4 camera_lookat_l    = glm::vec4(x,y,z,1.0f) + delta_camera; // Ponto "l", para onde a câmera (look-at) estará sempre olhando
-            glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
-            glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
-
-            glm::vec4 w = -camera_view_vector;
-            glm::vec4 u = crossproduct(camera_up_vector,w);
-    
             // Normalizamos os vetores u e w
             w = w / norm(w);
             u = u / norm(u);
@@ -584,7 +599,7 @@ int main(int argc, char* argv[])
             // g_LastFrameTime = currentTime;
 
 
-            float speed = 2 * g_deltaTime;
+            float speed = 10 * g_deltaTime;
             if(g_WPressed){
                 delta_camera-= w*speed;
             }
@@ -642,7 +657,7 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
         glUniform1i(g_lantern_uniform, g_LanternOn ? 1 : 0);
-        
+
         #define BANANA 0
         #define GORILLA  1
         #define PLANE  2
@@ -652,6 +667,7 @@ int main(int argc, char* argv[])
         #define LEAF_07 6
         #define SKYBOX_ID 7
         #define CYLINDER 8
+        #define DOOR 9
 
         // BEGIN MODIFICATION: Draw the Skybox
         // <eslgastal> The skybox exists in the world and is seen by
@@ -753,83 +769,113 @@ int main(int argc, char* argv[])
         // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         // glUniform1i(g_object_id_uniform, LEAF_07);
         // DrawVirtualObject("Leaf_07");
-        
+        float factor = 3.5;
+        float buildingSize = 0.1111f*factor;
 
+        if (g_EPressed && !g_doorStatus[0].animationOnGoing) {
+            //precisa colisao
+            g_doorStatus[0].animationOnGoing = true;
+
+            //abrir portas
+            // for(int i = 0; i<10; i++)
+            // {
+            //     if(!g_doorStatus[i].animationOnGoing && colisao_perto_porta(i))
+            //     {
+            //         g_doorStatus[i].animationOnGoing = true;
+            //     }
+            // }
+
+
+            //detectar porta fechada
+            //g_doorStatus[i].isOpen
+
+        }
+
+        if (g_EPressed && !g_doorStatus[1].animationOnGoing) {
+            //precisa colisao
+            g_doorStatus[1].animationOnGoing = true;
+
+        }
+        
         // Desenhamos o modelo do coelho
         model = Matrix_Translate(0.0f,0.0f,0.0f)
               //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
               //* Matrix_Rotate_X(1.57f)   // pi/2
               //* Matrix_Rotate_Z(g_AngleZ)
               //* Matrix_Rotate_Y(3.14f)   // pi
-              * Matrix_Scale(0.1111f, 0.1111f, 0.1111f);
+              * Matrix_Scale(buildingSize, buildingSize, buildingSize);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUILDING);
         //DrawVirtualObject("the_bunny");
         //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
         //DrawVirtualObject("inf_building");
         DrawVirtualObject("test_building");
+        drawDoor(model, 0);
 
         // Desenhamos o modelo do coelho
-        model = Matrix_Translate(5.0f,0.0f,0.0f)
+        model = Matrix_Translate(5.0f*factor,0.0f,0.0f)
               //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
               //* Matrix_Rotate_X(1.57f)   // pi/2
               //* Matrix_Rotate_Z(g_AngleZ)
               //* Matrix_Rotate_Y(3.14f)   // pi
-              * Matrix_Scale(0.1111f, 0.1111f, 0.1111f);
+              * Matrix_Scale(buildingSize, buildingSize, buildingSize);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUILDING);
         //DrawVirtualObject("the_bunny");
         //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
         //DrawVirtualObject("inf_building");
         DrawVirtualObject("test_building");
+        drawDoor(model, 1);
 
         // Desenhamos o modelo do coelho
-        model = Matrix_Translate(-5.0f,0.0f,0.0f)
+        model = Matrix_Translate(-5.0f*factor,0.0f,0.0f)
               //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
               //* Matrix_Rotate_X(1.57f)   // pi/2
               //* Matrix_Rotate_Z(g_AngleZ)
               //* Matrix_Rotate_Y(3.14f)   // pi
-              * Matrix_Scale(0.1111f, 0.1111f, 0.1111f);
+              * Matrix_Scale(buildingSize, buildingSize, buildingSize);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUILDING);
         //DrawVirtualObject("the_bunny");
         //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
         //DrawVirtualObject("inf_building");
         DrawVirtualObject("test_building");
+        drawDoor(model, 2);
 
         // Desenhamos o modelo do coelho
-        model = Matrix_Translate(4.0f,0.0f,6.0f)
+        model = Matrix_Translate(4.0f*factor,0.0f,6.0f*factor)
               //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
               //* Matrix_Rotate_X(1.57f)   // pi/2
               //* Matrix_Rotate_Z(g_AngleZ)
               * Matrix_Rotate_Y(1.57f)   // pi
-              * Matrix_Scale(0.1111f, 0.1111f, 0.1111f);
+              * Matrix_Scale(buildingSize, buildingSize, buildingSize);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUILDING);
         //DrawVirtualObject("the_bunny");
         //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
         //DrawVirtualObject("inf_building");
         DrawVirtualObject("test_building");
+        drawDoor(model, 3);
 
         // Desenhamos o modelo do coelho
-        model = Matrix_Translate(-4.0f,0.0f,6.0f)
+        model = Matrix_Translate(-4.0f*factor,0.0f,6.0f*factor)
               //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
               //* Matrix_Rotate_X(1.57f)   // pi/2
               //* Matrix_Rotate_Z(g_AngleZ)
               * Matrix_Rotate_Y(1.57f)   // pi
-              * Matrix_Scale(0.1111f, 0.1111f, 0.1111f);
+              * Matrix_Scale(buildingSize, buildingSize, buildingSize);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUILDING);
         //DrawVirtualObject("the_bunny");
         //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
         //DrawVirtualObject("inf_building");
         DrawVirtualObject("test_building");
-        
+        drawDoor(model, 4);
 
         // Desenhamos o plano do chão
         //model = Matrix_Translate(0.0f,-1.1f,0.0f);
         model = Matrix_Translate(0.0f,0.0f,0.0f)
-              * Matrix_Scale(10.0f, 10.0f, 10.0f);
+              * Matrix_Scale(10.0f*factor, 10.0f*factor, 10.0f*factor);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
@@ -839,6 +885,17 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, CYLINDER);
         DrawVirtualObject("cylinder");
+
+        // Desenhamos o modelo da porta
+        model = Matrix_Translate(0.1f,0.0f,0.0f)
+              //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
+              //* Matrix_Rotate_X(1.57f)   // pi/2
+              //* Matrix_Rotate_Z(g_AngleZ)
+              //* Matrix_Rotate_Y(3.14f)   // pi
+              * Matrix_Scale(buildingSize, buildingSize, buildingSize);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, DOOR);
+        DrawVirtualObject("door");
 
 
 
@@ -876,6 +933,50 @@ int main(int argc, char* argv[])
 
     // Fim do programa
     return 0;
+}
+//* Matrix_Translate(g_AngleX, 0.0f, g_AngleZ)
+
+//desenha porta
+void drawDoor(glm::mat4 model, int index)
+{
+    if(g_doorStatus[index*2].animationOnGoing)
+    {
+        float factor = 5.0f;
+        int openDirection = g_doorStatus[index*2].isOpen ? 1 : -1;
+        g_doorStatus[index*2].doorOffset += factor * g_deltaTime * openDirection;
+        if(!((g_doorStatus[index*2].doorOffset >= 0.0f) && (g_doorStatus[index*2].doorOffset <= 4.0f)))
+        {
+            g_doorStatus[index*2].doorOffset = g_doorStatus[index*2].isOpen ? 4.0f : 0.0f;
+            g_doorStatus[index*2].animationOnGoing = false;
+            g_doorStatus[index*2].isOpen = !g_doorStatus[index*2].isOpen;
+        }
+    }
+    glm::mat4 model1 = model  * Matrix_Translate(-6.4f+g_doorStatus[index*2].doorOffset,0.0f,27.8f)
+            * Matrix_Scale(1.64f, 0.57f, 1.0f)
+            * Matrix_Rotate_Y(M_PI_2) ;
+                glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model1));
+                glUniform1i(g_object_id_uniform, DOOR);
+                DrawVirtualObject("door");
+
+    if(g_doorStatus[index*2+1].animationOnGoing)
+    {
+        float factor = 5.0f;
+        int openDirection = g_doorStatus[index*2+1].isOpen ? 1 : -1;
+        g_doorStatus[index*2+1].doorOffset += factor * g_deltaTime * openDirection;
+        if(!((g_doorStatus[index*2+1].doorOffset >= 0.0f) && (g_doorStatus[index*2+1].doorOffset <= 4.0f)))
+        {
+            g_doorStatus[index*2+1].doorOffset = g_doorStatus[index*2+1].isOpen ? 4.0f : 0.0f;
+            g_doorStatus[index*2+1].animationOnGoing = false;
+            g_doorStatus[index*2+1].isOpen = !g_doorStatus[index*2+1].isOpen;
+        }
+    }
+    glm::mat4 model2 = model * Matrix_Translate(-6.6f+g_doorStatus[index*2+1].doorOffset,0.0f,-32.0f)
+                * Matrix_Scale(1.64f, 0.57f, 1.0f)
+                * Matrix_Rotate_Y(-M_PI_2-M_PI); 
+            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model2 ));
+            glUniform1i(g_object_id_uniform, DOOR);
+            DrawVirtualObject("door");
+ 
 }
 
 // Função que carrega uma imagem para ser utilizada como textura
@@ -1016,6 +1117,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage4"), 4);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage5"), 5);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage6"), 6);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage7"), 7);
     //glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage6"), 6);
     glUseProgram(0);
 }
@@ -1704,6 +1806,14 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
     {
         g_LanternOn = !g_LanternOn;
+    }
+
+    if (key == GLFW_KEY_LEFT_SHIFT)
+    {
+        if (action == GLFW_PRESS)
+        g_SHIFTPressed = true;
+        else if (action == GLFW_RELEASE)
+        g_SHIFTPressed = false;
     }
 }
 

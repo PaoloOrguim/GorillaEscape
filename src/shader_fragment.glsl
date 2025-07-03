@@ -32,6 +32,7 @@ uniform mat4 projection;
 #define LEAF_04 5
 #define LEAF_07 6
 #define SKYBOX_ID 7
+#define DOOR 9
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -49,6 +50,7 @@ uniform sampler2D TextureImage5;    // Leaf_04 texture
 uniform samplerCube TextureImage6; // Skybox cubemap texture
 // END MODIFICATION: New uniform for cubemap texture
 //uniform sampler2D TextureImage6;    // Leaf_07 texture
+uniform sampler2D TextureImage7;    // door texture
 
 uniform int lantern_on;
 
@@ -256,6 +258,13 @@ void main()
         V = texcoords.y;
         //Kd0 = texture(TextureImage6, vec2(U,V)).rgb;
         //texColor = texture(TextureImage6, vec2(U,V)).rgb;
+    }
+    else if ( object_id == DOOR )
+    {
+        U = texcoords.x;
+        V = texcoords.y;
+        Kd0 = texture(TextureImage7, vec2(U,V)).rgb;
+        texColor = texture(TextureImage7, vec2(U,V)).rgb;
     }
     else
     {
