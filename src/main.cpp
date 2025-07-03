@@ -251,6 +251,8 @@ DoorStatus g_doorStatus[10];
 
 glm::vec4 delta_camera = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f); // Ponto "c", centro da câmera
 
+glm::vec4 g_gorillaPosition = glm::vec4(-4.0f,0.5f,0.0f, 1.0f);
+
 // Variáveis que definem a câmera em coordenadas esféricas, controladas pelo
 // usuário através do mouse (veja função CursorPosCallback()). A posição
 // efetiva da câmera é calculada dentro da função main(), dentro do loop de
@@ -624,7 +626,7 @@ int main(int argc, char* argv[])
         // Note que, no sistema de coordenadas da câmera, os planos near e far
         // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
         float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -25.0f; // Posição do "far plane"
+        float farplane  = -50.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
         {
@@ -696,8 +698,24 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
         // END MODIFICATION: Draw the Skybox
 
+
+        glm::vec4 delta_Gorilla_Player = player_position - g_gorillaPosition;
+        //printf("x: %f   y:  %f    z:  %f  \n", g_gorillaPosition.x,g_gorillaPosition.y,g_gorillaPosition.z);
+        delta_Gorilla_Player.y = 0;
+        if(norm(delta_Gorilla_Player )!=0)
+
+        float distance = sqrt(dot(delta_Gorilla_Player, delta_Gorilla_Player)); //DISTANCIA GORILA
+
+        delta_Gorilla_Player = delta_Gorilla_Player / norm(delta_Gorilla_Player );
+        g_gorillaPosition += delta_Gorilla_Player * g_deltaTime;
+
+        float yaw = atan2(delta_Gorilla_Player.x, delta_Gorilla_Player.z); 
+
+        
+        //printf("x: %f   y:  %f    z:  %f  \n", g_gorillaPosition.x,g_gorillaPosition.y,g_gorillaPosition.z);
         // Desenhamos o modelo da esfera
-        model = Matrix_Translate(-4.0f,0.5f,0.0f);
+        model = Matrix_Translate(g_gorillaPosition.x,g_gorillaPosition.y,g_gorillaPosition.z)
+        * Matrix_Rotate_Y(yaw-M_PI_2) ;
             //  * Matrix_Rotate_Z(0.6f)
             //  * Matrix_Rotate_X(0.2f)
             //  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
@@ -716,7 +734,7 @@ int main(int argc, char* argv[])
             if (g_EPressed) {
                 bananaCollected = true;
                 printf("Banana coletada!\n");
-                ma_engine_play_sound(&audioEngine, "../../data/audio_files/banana.wav", NULL);
+                ma_engine_play_sound(&audioEngine, "../../data/audio_files/banana.wav", NULL); // Credits: https://freesound.org/people/Anthousai/
             }
         }
 
@@ -773,6 +791,7 @@ int main(int argc, char* argv[])
         float buildingSize = 0.1111f*factor;
 
         if (g_EPressed && !g_doorStatus[0].animationOnGoing) {
+            ma_engine_play_sound(&audioEngine, "../../data/audio_files/door_moving.wav", NULL); // Credits: https://freesound.org/people/ryanlouis/
             //precisa colisao
             g_doorStatus[0].animationOnGoing = true;
 
@@ -885,17 +904,6 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, CYLINDER);
         DrawVirtualObject("cylinder");
-
-        // Desenhamos o modelo da porta
-        model = Matrix_Translate(0.1f,0.0f,0.0f)
-              //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
-              //* Matrix_Rotate_X(1.57f)   // pi/2
-              //* Matrix_Rotate_Z(g_AngleZ)
-              //* Matrix_Rotate_Y(3.14f)   // pi
-              * Matrix_Scale(buildingSize, buildingSize, buildingSize);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, DOOR);
-        DrawVirtualObject("door");
 
 
 

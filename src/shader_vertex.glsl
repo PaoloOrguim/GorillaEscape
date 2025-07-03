@@ -10,6 +10,7 @@ layout (location = 2) in vec2 texture_coefficients;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform sampler2D TextureImage2;    // Grass
 
 // Atributos de vértice que serão gerados como saída ("out") pelo Vertex Shader.
 // ** Estes serão interpolados pelo rasterizador! ** gerando, assim, valores
@@ -19,6 +20,7 @@ out vec4 position_world;
 out vec4 position_model;
 out vec4 normal;
 out vec2 texcoords;
+out vec3 gouraudColor;
 
 // BEGIN MODIFICATION: New output for skybox texture coordinates
 out vec3 texCoordsSkybox;
@@ -83,5 +85,33 @@ void main()
     vec4 origin = vec4(0.0, 0.0, 0.0, 1.0);
     vec4 camera_position = inverse(view) * origin;
     texCoordsSkybox = (position_world - camera_position).xyz;
+
+
+    vec3 n = normalize(normal.xyz);
+    vec3 p = position_world.xyz;
+    vec3 camPos = (inverse(view) * vec4(0,0,0,1)).xyz;
+
+    // luz pontual branca na câmera (exemplo simples)
+    vec3 l = normalize(camPos - p);
+    vec3 v = normalize(camPos - p);
+    vec3 r = reflect(-l, n);
+
+    vec3 Ia = vec3(0.1);          // ambiente
+    vec3 Id = vec3(1.0);          // difusa
+    vec3 Is = vec3(1.0);          // especular
+    float shininess = 32.0;
+    float U = 0.0;
+    float V = 0.0;
+    U = texcoords.x;
+    V = texcoords.y;
+
+    vec3 Kd = texture(TextureImage2, vec2(U,V)).rgb;
+    vec3 Ks = vec3(0.0);
+    vec3 Ka = texture(TextureImage2, vec2(U,V)).rgb;                // ambiente proporcional ao difuso
+
+    float lambert = max(dot(n,l),0.0);
+    float spec    = pow(max(dot(r,v),0.0), shininess);
+
+    gouraudColor = Ka*Ia + Kd*Id*lambert + Ks*Is*spec;
 }
 

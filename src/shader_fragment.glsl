@@ -17,6 +17,7 @@ in vec2 texcoords;
 in vec3 texCoordsSkybox;
 // END MODIFICATION: Input for skybox texture coordinates
 
+in vec3 gouraudColor;
 
 // Matrizes computadas no código C++ e enviadas para a GPU
 uniform mat4 model;
@@ -157,7 +158,8 @@ void main()
 
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
     vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
-    vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb;
+    vec3 Ks1 = vec3(0.000000, 0.000000, 0.000000);
+    float q1 = 0;
 
     if ( object_id == BANANA )
     {
@@ -187,6 +189,9 @@ void main()
         V = texcoords.y;
         Kd0 = texture(TextureImage3, vec2(U,V)).rgb;
         texColor = texture(TextureImage3, vec2(U,V)).rgb;
+       
+        Ks1 = vec3(1.000000, 1.000000, 1.000000);
+        q1 = 30.84916;
 
     }
     else if ( object_id == GORILLA )
@@ -216,8 +221,15 @@ void main()
         Kd0 = texture(TextureImage1, vec2(U,V)).rgb;
         
         texColor = texture(TextureImage1, vec2(U,V)).rgb;
+        texColor *= 0.5;
+        
+        //deixar o gorila mais sombrio
+        Kd0 *= 0.1;
         //U = 0.0;
         //V = 0.0;
+        //color = vec4(gouraudColor, 1.0);    // usa cor interpolada
+        //return;
+
     }
     else if ( object_id == BUILDING )
     {
@@ -226,7 +238,12 @@ void main()
         U = texcoords.x;
         V = texcoords.y;
         Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
+        Kd0 *= 0.1;
+
         texColor = texture(TextureImage0, vec2(U,V)).rgb;
+        texColor *= 0.5;
+        Ks1 = vec3(0.300000, 0.300000, 0.300000);
+        q1 = 200.84916;
     }
     else if ( object_id == PLANE )
     {
@@ -235,6 +252,7 @@ void main()
         V = texcoords.y;
         Kd0 = texture(TextureImage2, vec2(U,V)).rgb;
         texColor = texture(TextureImage2, vec2(U,V)).rgb;
+
     }
     else if ( object_id == DOME )
     {
@@ -265,6 +283,8 @@ void main()
         V = texcoords.y;
         Kd0 = texture(TextureImage7, vec2(U,V)).rgb;
         texColor = texture(TextureImage7, vec2(U,V)).rgb;
+        Kd0 *= 0.1;
+        texColor *= 0.8;
     }
     else
     {
@@ -277,35 +297,47 @@ void main()
     vec3 Ia = vec3(0.003,0.003,0.003);
     vec3 ambient_term = texColor * Ia;
 
+    vec3 I = vec3(1.0,1.0,1.0);
+
     // Equação de Iluminação
     float lambert0 = max(0,dot(n,l));
     float lambert1 = max(0,dot(n,-l));  // Atentar para o termo "-l" que garante a renderização final correta
 
-    //vec3 diffuse  = (Kd0 * lambert0 + Kd1 * lambert1) * spotFactor;
-    //vec3 diffuse  = (Kd0 * lambert0) * spotFactor0;
+
+
+    // Termo especular utilizando o modelo de iluminação de Phong
+    vec3 phong_specular_term  = Ks1*I*pow(max(0, dot(r,v)),q1); // PREENCH AQUI o termo especular de Phong
+
+   
 
     //testes lanterna nova inicio
 
-    vec3 diffuse;
+    vec3 diffuseFlashlight;
     if(lantern_on > 0)
     {
-        diffuse  = (Kd0 * lambert0) * spotFactor0
+        diffuseFlashlight  = (Kd0 * lambert0) * spotFactor0
                         + (Kd0 * lambert0) * spotFactor1
                         + (Kd0 * lambert0) * spotFactor2
                         + (Kd0 * lambert0) * spotFactor3
                         + (Kd0 * lambert0) * spotFactor4;
+        phong_specular_term = phong_specular_term * spotFactor0
+                            + phong_specular_term * spotFactor1
+                            + phong_specular_term * spotFactor2
+                            + phong_specular_term * spotFactor3
+                            + phong_specular_term * spotFactor4;
+
     }
     else
     {
-        diffuse  = vec3(0.0, 0.0, 0.0);
+        diffuseFlashlight  = vec3(0.0, 0.0, 0.0);
+        phong_specular_term = vec3(0.0, 0.0, 0.0);
     }
 
     //testes lanterna nova fim
 
 
-    color.rgb = diffuse + ambient_term;    
+    color.rgb = diffuseFlashlight + ambient_term + phong_specular_term;    
     
-    //color.rgb = Kd0 * (lambert0 + 0.01) + Kd1 * (lambert1 + 0.01);
 
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
     // necessário:
