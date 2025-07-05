@@ -545,43 +545,15 @@ int main(int argc, char* argv[])
             glm::vec4 new_delta = old_delta + movement;
             glm::vec4 candidate_pos = glm::vec4(0.0f, 0.2f, 0.0f, 1.0f) + new_delta;
 
+            bool crossing = collisionCheckBuilding(glm::vec2(candidate_pos.x, candidate_pos.z), 4);
 
-            // We determine a wall between the banana and the gorilla, so we can check if the player is crossing it
-            // This is a simple line segment from the banana to the gorilla, which we can
-            // use to check if the player is crossing it.
-            // We can do this because we assume every wall will be perpendicular to the ground, so we can use a 2D line segment in the XZ plane.
-            glm::vec2 lineStart1 = glm::vec2(-1.75f, 2.98f);    // First outside wall
-            glm::vec2 lineEnd1 = glm::vec2(-0.89f, 3.00f);
-
-            glm::vec2 lineStart2 = glm::vec2(-1.75f, 2.98f);    // Second outside wall
-            glm::vec2 lineEnd2 = glm::vec2(-1.76f, -3.68f);
-
-            glm::vec2 lineStart3 = glm::vec2(-1.76f, -3.68f);    // Third outside wall
-            glm::vec2 lineEnd3 = glm::vec2(-0.89f, -3.68f);
-
-            glm::vec2 lineStart4 = glm::vec2(-0.44f, -3.67f);    // Fourth outside wall
-            glm::vec2 lineEnd4 = glm::vec2(0.44f, -3.67f);
-
-            glm::vec2 lineStart5 = glm::vec2(0.44f, -3.67f);    // Fifth outside wall
-            glm::vec2 lineEnd5 = glm::vec2(0.44f, 3.00f);
-
-            glm::vec2 lineStart6 = glm::vec2(0.44f, 3.00f);    // Sixth outside wall
-            glm::vec2 lineEnd6 = glm::vec2(-0.44f, 3.00f);
-
-            // bool crossing1 = collisionCheckCircleLine(lineStart1, lineEnd1, glm::vec2(candidate_pos.x, candidate_pos.z));
-            // bool crossing2 = collisionCheckCircleLine(lineStart2, lineEnd2, glm::vec2(candidate_pos.x, candidate_pos.z));
-            // bool crossing3 = collisionCheckCircleLine(lineStart3, lineEnd3, glm::vec2(candidate_pos.x, candidate_pos.z));
-            // bool crossing4 = collisionCheckCircleLine(lineStart4, lineEnd4, glm::vec2(candidate_pos.x, candidate_pos.z));
-            // bool crossing5 = collisionCheckCircleLine(lineStart5, lineEnd5, glm::vec2(candidate_pos.x, candidate_pos.z));
-            // bool crossing6 = collisionCheckCircleLine(lineStart6, lineEnd6, glm::vec2(candidate_pos.x, candidate_pos.z));
-
-            bool crossing1 = false;
-            bool crossing2 = false;
-            bool crossing3 = false;
-            bool crossing4 = false;
-            bool crossing5 = false;
-            bool crossing6 = false;
-            if (!crossing1 && !crossing2 && !crossing3 && !crossing4 && !crossing5 && !crossing6) {
+            // bool crossing1 = false;
+            // bool crossing2 = false;
+            // bool crossing3 = false;
+            // bool crossing4 = false;
+            // bool crossing5 = false;
+            // bool crossing6 = false;
+            if (!crossing) {
                 // If the camera is not crossing the line, we can move
                 delta_camera = new_delta;
             }
@@ -810,11 +782,11 @@ int main(int argc, char* argv[])
 
         }
 
-        if (g_EPressed && !g_doorStatus[1].animationOnGoing) {
+        //if (g_EPressed && !g_doorStatus[1].animationOnGoing) {
             //precisa colisao
-            g_doorStatus[1].animationOnGoing = true;
+        //    g_doorStatus[1].animationOnGoing = true;
 
-        }
+        //}
         
         // Desenhamos o modelo do coelho
         model = Matrix_Translate(0.0f,0.0f,0.0f)
@@ -899,6 +871,8 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
+
+        // Modelo do cilindro para identificar a posição dos vértices das paredes
         model = Matrix_Translate(g_AngleX,0.0f,g_AngleZ)
               * Matrix_Scale(0.01f, 1.0f, 0.01f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));

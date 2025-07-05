@@ -1,6 +1,8 @@
 #include "collisions.h"
 #include <algorithm>
 #include <cstdio>   // Only for the printf function
+#include <vector>
+#include <utility>  // For std::pair
 
 // Function to check collision between an axis-aligned bounding box (AABB)
 // and a sphere
@@ -59,68 +61,90 @@ bool collisionCheckCircleLine(
     return dist2 <= circleRadius * circleRadius;
 }
 
+// Function that iterates through every wall from a specific building
+// and checks if the player is colliding with any of them.
+// It receives the player's position and the index from the specific building
+// Each building has an offset from the origin and a rotation which have to be considered
+// when checking for collisions.
+bool collisionCheckBuilding(
+    const glm::vec2& playerCandidatePosition,
+    int buildingIndex
+) {
+    // Vector of pairs containing the start and end points of each wall
+    // from the center building, offsets will be determined from there
+    static const std::vector<std::pair<glm::vec2, glm::vec2>> walls = {
+        // Doors are not included in this list
+        // Outside walls
+        {{1.56f, 10.50f}, {1.56f, -12.84f}},
+        {{1.56f, -12.84f}, {-1.56f, -12.86f}},
+        {{-3.12f, -12.87f}, {-6.16f, -12.89f}},
+        {{-6.16f, -12.89f}, {-6.16f, 10.44f}},
+        {{-6.16f, 10.44f}, {-3.11f, 10.47f}},
+        {{-1.56f, 10.50f}, {1.56f, 10.50f}},
+        // Inside walls
+        {{-1.56f, 10.50f}, {-1.56f, 4.65f}},
+        {{-1.56f, 3.87f}, {-1.46f, -2.72f}},
+        {{-1.47f, -3.50f}, {-1.47f, -10.11f}},
+        {{-1.47f, -10.89f}, {-1.47f, -12.78f}},
+        {{-1.38f, -11.27f}, {1.53f, -11.27f}},
+        {{1.53f, -4.28f}, {-1.38f, -4.28f}},
+        {{-1.38f, -3.89f}, {1.53f, -3.89f}},
+        {{1.53f, 3.11f}, {-1.38f, 3.11f}},
+        {{-1.38f, 3.48f}, {1.53f,3.48f}},
+        {{-3.17f,10.48f},{-3.20f,4.65f}},
+        {{-3.20f, 3.87f},{-3.20f,-2.72f}},
+        {{-3.20f,-3.50f},{-3.20f,-10.11f}},
+        {{-3.20f,-10.89f},{-3.20f,-12.84f}},
+        {{-3.29f,-11.27f},{-6.13f,-11.33f}},
+        {{-6.13f,-4.34f},{-3.29f,-4.28f}},
+        {{-3.29f,-3.89f},{-6.13f,-3.94f}},
+        {{-6.13f,3.05f},{-3.29f,3.11f}},
+        {{-3.29f,3.48f},{-6.13f,3.43f}}
+    };
 
-// The following functions are commented out because they are not used in the current implementation.
-// They were used as initial ideas for collision detection, but the current implementation uses a different approach.
-// bool pointCircle(
-//     const glm::vec2& point,
-//     const glm::vec2& circleCenter,
-//     float circleRadius
-// ) {
-//     float distX = point.x - circleCenter.x;
-//     float distY = point.y - circleCenter.y;
-//     float distSquared = (distX * distX + distY * distY);
-//     if (distSquared <= (circleRadius * circleRadius))
-//         return true;
-//     return false;
-// }
+    // If the building index is not 0, we need to apply an offset
+    // and a rotation to the walls vector.
+    // The offset and rotation are both determined by the building index
 
-// bool linePoint(
-//     const glm::vec2& lineStart,
-//     const glm::vec2& lineEnd,
-//     const glm::vec2& point
-// ) {
-//     float d1 = glm::distance(lineStart, point);
-//     float d2 = glm::distance(lineEnd, point);
+    glm::vec2 offset = glm::vec2(0.0f, 0.0f);
+    float rotationAngle = 0.0f;
+    switch (buildingIndex) {
+        case 0:
+            // No offset or rotation for the center building
+            break;
+        case 1:
+            offset = glm::vec2(17.5f, 0.0f);
+            // No rotation for the second building
+            break;
+        case 2:
+            offset = glm::vec2(-17.5f, 0.0f);
+            // No rotation for the third building
+            break;
+        case 3:
+            offset = glm::vec2(14.0f, 21.0f);
+            // 90 degrees rotation for the fourth building
+            rotationAngle = glm::radians(90.0f);
+            break;
+        case 4:
+            offset = glm::vec2(-14.0f, 21.0f);
+            // 90 degrees rotation for the fifth building
+            rotationAngle = glm::radians(90.0f);
+            break;
+        default:
+            return false; // Invalid building index, no collision check
+    }
+    float c = glm::cos(rotationAngle), s = glm::sin(rotationAngle);
+    glm::mat2 R(c, -s,
+                s,  c);
 
-//     float lineLength = glm::distance(lineStart, lineEnd);
-//     float buffer = 0.01f; // Small buffer to account for floating point precision
-//     if (d1 + d2 >= lineLength - buffer && d1 + d2 <= lineLength + buffer) {
-//         // The point is on the line segment
-//         return true;
-//     }
-//     return false; // The point is not on the line segment
-// }
+    // 4) Transform each base segment into world space and test collision
+    for (auto const& seg : walls) {
+        glm::vec2 a = R * seg.first  + offset;
+        glm::vec2 b = R * seg.second + offset;
 
-// bool collisionCheckCircleLine(
-//     const glm::vec2& lineStart,
-//     const glm::vec2& lineEnd,
-//     const glm::vec2& circleCenter
-// ) {
-//     float circleRadius = 0.3f; // Hardcoded radius for the player box
-    
-//     bool inside1 = pointCircle(lineStart, circleCenter, circleRadius);
-//     bool inside2 = pointCircle(lineEnd, circleCenter, circleRadius);
-//     if (inside1 || inside2) {
-//         return true; // One of the endpoints is inside the circle
-//     }
-
-//     float distX = lineStart.x - lineEnd.x;
-//     float distY = lineStart.y - lineEnd.y;
-//     float lenSquared = distX * distX + distY * distY;
-
-//     float dot = ( ((circleCenter.x - lineStart.x)*(lineEnd.x-lineStart.x)) + ((circleCenter.y - lineStart.y)*(lineEnd.y - lineStart.y)) ) / (lenSquared);
-
-//     float closestX = lineStart.x + dot * (lineEnd.x - lineStart.x);
-//     float closestY = lineStart.y + dot * (lineEnd.y - lineStart.y);
-
-//     bool onSegment = linePoint(lineStart, lineEnd, glm::vec2(closestX, closestY));
-//     if (!onSegment) {
-//         return false; // Closest point is not on the segment
-//     }
-
-//     distX = closestX - circleCenter.x;
-//     distY = closestY - circleCenter.y;
-//     float distSquared = distX * distX + distY * distY;
-//     return distSquared <= (circleRadius * circleRadius);
-// }
+        if (collisionCheckCircleLine(a, b, playerCandidatePosition))
+            return true;
+    }
+    // If no collision was detected, we return false
+    return false;
+}
