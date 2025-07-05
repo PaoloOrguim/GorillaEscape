@@ -29,6 +29,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
+#include <array>
 
 // Headers das bibliotecas OpenGL
 #include <glad/glad.h>   // Criação de contexto OpenGL 3.3
@@ -161,6 +162,7 @@ void drawDoor(glm::mat4 model, int index);
 
 
 void LoadCubemapTextures(const std::vector<std::string>& filenames);
+int getClosestBuildingIndex(const glm::vec2& pos);
 glm::vec3 bezierCubic(float t,
                       const glm::vec3& P0,
                       const glm::vec3& P1,
@@ -545,14 +547,9 @@ int main(int argc, char* argv[])
             glm::vec4 new_delta = old_delta + movement;
             glm::vec4 candidate_pos = glm::vec4(0.0f, 0.2f, 0.0f, 1.0f) + new_delta;
 
-            bool crossing = collisionCheckBuilding(glm::vec2(candidate_pos.x, candidate_pos.z), 4);
+            int closest_structure_index = getClosestBuildingIndex(glm::vec2(candidate_pos.x, candidate_pos.z));
+            bool crossing = collisionCheckBuilding(glm::vec2(candidate_pos.x, candidate_pos.z), closest_structure_index);
 
-            // bool crossing1 = false;
-            // bool crossing2 = false;
-            // bool crossing3 = false;
-            // bool crossing4 = false;
-            // bool crossing5 = false;
-            // bool crossing6 = false;
             if (!crossing) {
                 // If the camera is not crossing the line, we can move
                 delta_camera = new_delta;
@@ -874,7 +871,7 @@ int main(int argc, char* argv[])
 
         // Modelo do cilindro para identificar a posição dos vértices das paredes
         model = Matrix_Translate(g_AngleX,0.0f,g_AngleZ)
-              * Matrix_Scale(0.01f, 1.0f, 0.01f);
+              * Matrix_Scale(0.05f, 1.0f, 0.05f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, CYLINDER);
         DrawVirtualObject("cylinder");
@@ -2143,6 +2140,30 @@ void LoadCubemapTextures(const std::vector<std::string>& filenames)
     printf("Texturas de cubemap carregadas com sucesso!\n");
 }
 // END MODIFICATION: New function to load cubemap textures
+
+// Returns the index [0–4] of the closest structure listed in the array (x,z)
+int getClosestBuildingIndex(const glm::vec2& pos) {
+    static const std::array<glm::vec2,5> centers = {{
+        {  -2.47f,   0.0f}, // 0 X: -2.47; Z: 0.00
+        { 15.03f,   0.0f},  // 1 X: 15.03; Z: 0.00
+        {-19.96f,   0.0f},  // 2 X: -19.96; Z: 0.00
+        {12.74f,  23.58f},  // 3 X: 12.74; Z: 23.58
+        { -15.56f,  23.58f} // 4 X: -15.56; Z: 23.58
+    }};
+
+    float bestDist2 = std::numeric_limits<float>::max();
+    int   bestIdx   = 0;
+
+    for (int i = 0; i < (int)centers.size(); ++i) {
+        glm::vec2 d = pos - centers[i];
+        float     d2 = glm::dot(d, d);  // distância ao quadrado
+        if (d2 < bestDist2) {
+            bestDist2 = d2;
+            bestIdx   = i;
+        }
+    }
+    return bestIdx;
+}
 
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :
