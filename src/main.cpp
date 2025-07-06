@@ -938,6 +938,7 @@ void drawDoor(glm::mat4 model, int index)
         g_doorStatus[index*2].doorOffset += factor * g_deltaTime * openDirection;
         if(!((g_doorStatus[index*2].doorOffset > 0.0f) && (g_doorStatus[index*2].doorOffset < 4.0f)))
         {
+            printf("Door now offset: %f\n", g_doorStatus[index*2].doorOffset);
             g_doorStatus[index*2].doorOffset = g_doorStatus[index*2].isOpen ? 4.0f : 0.0f;
             g_doorStatus[index*2].animationOnGoing = false;
             g_doorStatus[index*2].isOpen = !g_doorStatus[index*2].isOpen;
@@ -958,10 +959,11 @@ void drawDoor(glm::mat4 model, int index)
         g_doorStatus[index*2+1].doorOffset += factor * g_deltaTime * openDirection;
         if(!((g_doorStatus[index*2+1].doorOffset > 0.0f) && (g_doorStatus[index*2+1].doorOffset < 4.0f)))
         {
+            printf("Door now offset: %f\n", g_doorStatus[index*2+1].doorOffset);
             g_doorStatus[index*2+1].doorOffset = g_doorStatus[index*2+1].isOpen ? 4.0f : 0.0f;
             g_doorStatus[index*2+1].animationOnGoing = false;
             g_doorStatus[index*2+1].isOpen = !g_doorStatus[index*2+1].isOpen;
-            printf("Door now: %d\n", g_doorStatus[index*2].isOpen);
+            printf("Door now: %d\n", g_doorStatus[index*2+1].isOpen);
         }
     }
     glm::mat4 model2 = model * Matrix_Translate(-6.6f+g_doorStatus[index*2+1].doorOffset,0.0f,-32.0f)
