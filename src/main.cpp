@@ -30,6 +30,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <array>
+#include <random>
 
 // Headers das bibliotecas OpenGL
 #include <glad/glad.h>   // Criação de contexto OpenGL 3.3
@@ -163,6 +164,7 @@ void drawDoor(glm::mat4 model, int index);
 
 void LoadCubemapTextures(const std::vector<std::string>& filenames);
 int getClosestBuildingIndex(const glm::vec2& pos);
+void initBananas();
 glm::vec3 bezierCubic(float t,
                       const glm::vec3& P0,
                       const glm::vec3& P1,
@@ -249,6 +251,20 @@ struct DoorStatus
 };
 DoorStatus g_doorStatus[10];
 
+struct BananaStatus {
+    glm::vec2 center;    // coordinates (x, z)
+    bool      collected; // se já foi coletada
+};
+
+BananaStatus g_bananaStatus[6];
+
+static const std::vector<glm::vec2> possibleSpawns = {
+    { 18.00f, -7.00f}, { 13.00f, -6.00f}, { 13.00f,  2.00f}, { 18.00f,  2.00f}, { 17.00f,  6.00f}, { 13.00f,  8.00f},
+    {  0.00f,  9.00f}, {-5.00f,  8.00f},  {-4.00f,  1.00f},  {  0.00f,  2.00f}, {  0.80f, -9.00f}, {-4.20f, -9.00f},
+    {-17.20f,-7.00f},  {-22.20f,-6.00f},  {-22.20f,-3.00f},  {-17.20f, 0.00f},  {-18.20f, 8.00f},  {-22.20f, 9.00f},
+    {-20.20f,21.00f},  {-19.20f,26.00f},  {-13.20f,26.50f},  {-12.20f,21.40f},  {-5.20f,20.40f},   {-4.20f,25.40f},
+    {  6.80f,26.40f},  {  8.80f,21.40f},  { 16.80f,20.40f},  { 15.80f,25.40f},  { 22.80f,26.40f},  { 23.80f,21.10f}
+};
 
 
 glm::vec4 delta_camera = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f); // Ponto "c", centro da câmera
@@ -457,6 +473,8 @@ int main(int argc, char* argv[])
     glm::vec4 player_position = glm::vec4(0.0f,0.2f,0.0f,1.0f);
 
     int closest_structure_index = 0;
+
+    initBananas();
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     //LOOP
@@ -704,28 +722,49 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, GORILLA);
         DrawVirtualObject("gorilla");
 
+
+        // Logic to collect and draw bananas
+        // Fixed collision parameters
         glm::vec3 playerBoxCenter = glm::vec3(player_position);
         glm::vec3 playerBoxSize = glm::vec3(0.5f, 0.5f, 0.5f);
-        glm::vec3 sphereCenter = glm::vec3(-4.0f, 0.5f, 1.0f);  // Hardcoded with the same coordinates as the banana model
         float sphereRadius = 0.5f;
-        bool hit = collisionCheckBoxSphere(playerBoxCenter, playerBoxSize, sphereCenter, sphereRadius);
+        // Iterate through all bananas
+        for (int i = 0; i < 6; ++i) {
+            auto &b = g_bananaStatus[i];
 
-        // Collision is ALWAYS calculated currently, but we can optimize this by calculating it inside the if statement after checking if the banana has been collected
-        if (hit && !bananaCollected){    // On collision, press E to collect the banana
-            if (g_EPressed) {
-                bananaCollected = true;
-                printf("Banana coletada!\n");
-                ma_engine_play_sound(&audioEngine, "../../data/audio_files/banana.wav", NULL); // Credits: https://freesound.org/people/Anthousai/
+            // If the banana has already been collected, skip it
+            if (b.collected) continue;
+
+            // Define the center of the banana sphere
+            glm::vec3 sphereCenter = glm::vec3(b.center.x, 0.5f, b.center.y);
+
+            // Check for collision between the player box and the banana sphere
+            bool hit = collisionCheckBoxSphere(
+                playerBoxCenter,
+                playerBoxSize,
+                sphereCenter,
+                sphereRadius
+            );
+
+            // If the player is colliding with the banana and the E key is pressed, collect it
+            if (hit && g_EPressed) {
+                b.collected = true;
+                printf("Banana %d coletada em (%.2f, %.2f)!\n",
+                    i, b.center.x, b.center.y);
+                ma_engine_play_sound(
+                    &audioEngine,
+                    "../../data/audio_files/banana.wav",
+                    NULL
+                );
+                continue;  // skip drawing this banana in this frame
             }
-        }
 
-        if (!bananaCollected){  // Only draw the banana if it has not been collected
-            model = Matrix_Translate(-4.0f,0.5f,1.0f)
-                * Matrix_Scale(0.1f, 0.1f, 0.1f);
-                //  * Matrix_Rotate_Z(0.6f)
-                //  * Matrix_Rotate_X(0.2f)
-                //  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
-            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            // Draw the banana if it has not been collected
+            glm::mat4 model =
+                Matrix_Translate(b.center.x, 0.5f, b.center.y)
+            * Matrix_Scale(0.1f, 0.1f, 0.1f);
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE,
+                            glm::value_ptr(model));
             glUniform1i(g_object_id_uniform, BANANA);
             DrawVirtualObject("banana");
         }
@@ -1638,7 +1677,7 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 
 // Definição da função que será chamada sempre que o usuário pressionar alguma
 // tecla do teclado. Veja http://www.glfw.org/docs/latest/input_guide.html#input_key
-float delta = 0.1f;
+float delta = 1.0f;
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 {
     // ======================
@@ -1672,7 +1711,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_Y && action == GLFW_PRESS)
     {
         //g_AngleY += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-        delta = (mod & GLFW_MOD_SHIFT) ? 0.1f : 0.01f;
+        delta = (mod & GLFW_MOD_SHIFT) ? 1.0f : 0.1f;
         printf("delta = %.2f\n", delta);
     }
     if (key == GLFW_KEY_Z && action == GLFW_PRESS)
@@ -2156,6 +2195,26 @@ int getClosestBuildingIndex(const glm::vec2& pos) {
         }
     }
     return bestIdx;
+}
+
+// Function to initialize the bananas
+// The bananas are initialized with random coordinates
+// from the vector possibleSpawns
+// and every banana is initialized as not collected.
+void initBananas() {
+    auto spawns = possibleSpawns;
+
+    std::random_device rd;
+    std::mt19937       gen(rd());
+
+    // We shuffle the possible spawn points
+    std::shuffle(spawns.begin(), spawns.end(), gen);
+
+    // We assign the first 6 unique spawn points to the bananas
+    for (int i = 0; i < 6; ++i) {
+        g_bananaStatus[i].center    = spawns[i];
+        g_bananaStatus[i].collected = false;
+    }
 }
 
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
