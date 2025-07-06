@@ -934,7 +934,7 @@ void drawDoor(glm::mat4 model, int index)
     if(g_doorStatus[index*2].animationOnGoing)
     {
         float factor = 5.0f;
-        int openDirection = g_doorStatus[index*2].isOpen ? 1 : -1;
+        int openDirection = g_doorStatus[index*2].isOpen ? -1 : 1;
         g_doorStatus[index*2].doorOffset += factor * g_deltaTime * openDirection;
         if(!((g_doorStatus[index*2].doorOffset > 0.0f) && (g_doorStatus[index*2].doorOffset < 4.0f)))
         {
@@ -955,7 +955,7 @@ void drawDoor(glm::mat4 model, int index)
     if(g_doorStatus[index*2+1].animationOnGoing)
     {
         float factor = 5.0f;
-        int openDirection = g_doorStatus[index*2+1].isOpen ? 1 : -1;
+        int openDirection = g_doorStatus[index*2+1].isOpen ? -1 : 1;
         g_doorStatus[index*2+1].doorOffset += factor * g_deltaTime * openDirection;
         if(!((g_doorStatus[index*2+1].doorOffset > 0.0f) && (g_doorStatus[index*2+1].doorOffset < 4.0f)))
         {
