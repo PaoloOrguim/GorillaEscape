@@ -404,7 +404,11 @@ int main(int argc, char* argv[])
         "../../data/texture_files/posz.jpg", // +Z
         "../../data/texture_files/negz.jpg"   // -Z
     }); //TextureImage6
-     LoadTextureImage("../../data/texture_files/DoorUV.png"); // TextureImage7
+    LoadTextureImage("../../data/texture_files/DoorUV.png"); // TextureImage7
+    LoadTextureImage("../../data/texture_files/sign_1.png"); // TextureImage8
+    LoadTextureImage("../../data/texture_files/sign_2.png"); // TextureImage9
+
+
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel gorillamodel("../../data/obj_files/gorilla.obj");
     ComputeNormals(&gorillamodel);
@@ -442,6 +446,14 @@ int main(int argc, char* argv[])
     ComputeNormals(&doormodel);
     BuildTrianglesAndAddToVirtualScene(&doormodel);
 
+    ObjModel sign1model("../../data/obj_files/sign_1.obj");
+    ComputeNormals(&sign1model);
+    BuildTrianglesAndAddToVirtualScene(&sign1model);
+
+    ObjModel sign2model("../../data/obj_files/sign_2.obj");
+    ComputeNormals(&sign2model);
+    BuildTrianglesAndAddToVirtualScene(&sign2model);
+
     if ( argc > 1 )
     {
         ObjModel model(argv[1]);
@@ -459,7 +471,7 @@ int main(int argc, char* argv[])
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
-    
+
     ma_engine audioEngine;
     if (ma_engine_init(NULL, &audioEngine) != MA_SUCCESS) {
         fprintf(stderr, "Failed to initialize audio engine\n");
@@ -469,7 +481,7 @@ int main(int argc, char* argv[])
     float leafT = 0.0f;
     const float leafDuration = 2.0f;
 
-    glm::vec4 player_position = glm::vec4(0.0f,0.2f,0.0f,1.0f);
+    glm::vec4 player_position = glm::vec4(0.0f,0.2f,0.0f,1.0f); // Arrumar spawn para X: -2.40; Z: -25.20
 
     int closest_structure_index = 0;
 
@@ -501,7 +513,7 @@ int main(int argc, char* argv[])
 
         // Agora computamos a matriz de Projeção.
         glm::mat4 view;
-    
+
 
         float currentTime = (float)glfwGetTime();
         g_deltaTime = currentTime - g_LastFrameTime;
@@ -527,7 +539,7 @@ int main(int argc, char* argv[])
         glm::vec4 u = crossproduct(camera_up_vector,w);
         if (g_UseLookAtCamera)
         {
-            // Normalizamos os vetores u e w            
+            // Normalizamos os vetores u e w
             w.y = 0.0f;
             u.y = 0.0f;
             w = w/norm(w);
@@ -610,8 +622,8 @@ int main(int argc, char* argv[])
             view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
             player_position = camera_position_c;
         }
-        
-        
+
+
         // Agora computamos a matriz de Projeção.
         glm::mat4 projection;
 
@@ -643,7 +655,7 @@ int main(int argc, char* argv[])
 
         glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
 
-        
+
         // Enviamos as matrizes "view" e "projection" para a placa de vídeo
         // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
         // efetivamente aplicadas em todos os pontos.
@@ -670,6 +682,8 @@ int main(int argc, char* argv[])
         #define SKYBOX_ID 7
         #define CYLINDER 8
         #define DOOR 9
+        #define SIGN_1 10
+        #define SIGN_2 11
 
         // BEGIN MODIFICATION: Draw the Skybox
         // <eslgastal> The skybox exists in the world and is seen by
@@ -708,7 +722,7 @@ int main(int argc, char* argv[])
         delta_Gorilla_Player = delta_Gorilla_Player / norm(delta_Gorilla_Player );
         g_gorillaPosition += delta_Gorilla_Player * g_deltaTime;
 
-        float yaw = atan2(delta_Gorilla_Player.x, delta_Gorilla_Player.z); 
+        float yaw = atan2(delta_Gorilla_Player.x, delta_Gorilla_Player.z);
 
         // Draw gorilla
         model = Matrix_Translate(g_gorillaPosition.x,g_gorillaPosition.y,g_gorillaPosition.z)
@@ -793,7 +807,7 @@ int main(int argc, char* argv[])
             ma_engine_play_sound(&audioEngine, "../../data/audio_files/door_moving.wav", NULL); // Credits: https://freesound.org/people/ryanlouis/
             g_doorStatus[closest_structure_index * 2 + doorInRange].animationOnGoing = true;
         }
-        
+
         // We draw the five buildings
         model = Matrix_Translate(0.0f,0.0f,0.0f)
               * Matrix_Scale(buildingSize, buildingSize, buildingSize);
@@ -847,6 +861,22 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, CYLINDER);
         DrawVirtualObject("cylinder");
+
+        // Cylinder model to help pinpoint coordinates
+        model = Matrix_Translate(-0.70f,0.0f,-12.90f)
+              * Matrix_Rotate_Y(1.57f)  // pi/2
+              * Matrix_Scale(0.1f, 0.12f, 0.15f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, SIGN_1);
+        DrawVirtualObject("sign1");
+
+        // Cylinder model to help pinpoint coordinates
+        model = Matrix_Translate(13.70f,0.0f,-12.90f)
+              * Matrix_Rotate_Y(1.57f)  // pi/2
+              * Matrix_Scale(0.1f, 0.12f, 0.15f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, SIGN_2);
+        DrawVirtualObject("sign2");
 
 
 
@@ -923,11 +953,11 @@ void drawDoor(glm::mat4 model, int index)
     }
     glm::mat4 model2 = model * Matrix_Translate(-6.6f+g_doorStatus[index*2+1].doorOffset,0.0f,-32.0f)
                 * Matrix_Scale(1.64f, 0.57f, 1.0f)
-                * Matrix_Rotate_Y(-M_PI_2-M_PI); 
+                * Matrix_Rotate_Y(-M_PI_2-M_PI);
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model2 ));
             glUniform1i(g_object_id_uniform, DOOR);
             DrawVirtualObject("door");
- 
+
 }
 
 // Função que carrega uma imagem para ser utilizada como textura
@@ -1069,6 +1099,8 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage5"), 5);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage6"), 6);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage7"), 7);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage8"), 8);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage9"), 9);
     //glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage6"), 6);
     glUseProgram(0);
 }
@@ -1442,7 +1474,7 @@ GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id)
         fprintf(stderr, "%s", output.c_str());
     }
 
-    // Os "Shader Objects" podem ser marcados para deleção após serem linkados 
+    // Os "Shader Objects" podem ser marcados para deleção após serem linkados
     glDeleteShader(vertex_shader_id);
     glDeleteShader(fragment_shader_id);
 
@@ -1546,7 +1578,7 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
         firstMouse = false;
         return;
     }
-    
+
     // Deslocamento do cursor do mouse em x e y de coordenadas de tela!
     float dx = xpos - g_LastCursorPosX;
     float dy = ypos - g_LastCursorPosY;
@@ -1569,7 +1601,7 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
     // cursor como sendo a última posição conhecida do cursor.
     g_LastCursorPosX = xpos;
     g_LastCursorPosY = ypos;
-    
+
 }
 
 void ToggleFullscreen(GLFWwindow*& window, GLFWmonitor*& monitor, bool& isFullscreen)
@@ -1617,7 +1649,7 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 
 // Definição da função que será chamada sempre que o usuário pressionar alguma
 // tecla do teclado. Veja http://www.glfw.org/docs/latest/input_guide.html#input_key
-float delta = 1.0f;
+float delta = 0.1f;
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 {
     // ======================
@@ -1651,7 +1683,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_Y && action == GLFW_PRESS)
     {
         //g_AngleY += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-        delta = (mod & GLFW_MOD_SHIFT) ? 1.0f : 0.1f;
+        delta = (mod & GLFW_MOD_SHIFT) ? 0.1f : 0.01f;
         printf("delta = %.2f\n", delta);
     }
     if (key == GLFW_KEY_Z && action == GLFW_PRESS)
@@ -1891,7 +1923,7 @@ void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
     if ( ellapsed_seconds > 1.0f )
     {
         numchars = snprintf(buffer, 20, "%.2f fps", ellapsed_frames / ellapsed_seconds);
-    
+
         old_seconds = seconds;
         ellapsed_frames = 0;
     }
