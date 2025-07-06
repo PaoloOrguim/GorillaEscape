@@ -253,11 +253,13 @@ DoorStatus g_doorStatus[10];
 
 struct BananaStatus {
     glm::vec2 center;    // coordinates (x, z)
-    bool      collected; // se já foi coletada
+    bool      collected;
 };
 
 BananaStatus g_bananaStatus[6];
 
+// Vector with possible spawn points for the bananas (only inside rooms in the buildings)
+// Each line is a different building, however the order is not correct, but it does not matter
 static const std::vector<glm::vec2> possibleSpawns = {
     { 18.00f, -7.00f}, { 13.00f, -6.00f}, { 13.00f,  2.00f}, { 18.00f,  2.00f}, { 17.00f,  6.00f}, { 13.00f,  8.00f},
     {  0.00f,  9.00f}, {-5.00f,  8.00f},  {-4.00f,  1.00f},  {  0.00f,  2.00f}, {  0.80f, -9.00f}, {-4.20f, -9.00f},
@@ -404,7 +406,6 @@ int main(int argc, char* argv[])
     }); //TextureImage6
      LoadTextureImage("../../data/texture_files/DoorUV.png"); // TextureImage7
     // Construímos a representação de objetos geométricos através de malhas de triângulos
-    //ObjModel spheremodel("../../data/sphere.obj");
     ObjModel gorillamodel("../../data/obj_files/gorilla.obj");
     ComputeNormals(&gorillamodel);
     BuildTrianglesAndAddToVirtualScene(&gorillamodel);
@@ -413,8 +414,6 @@ int main(int argc, char* argv[])
     ComputeNormals(&bananamodel);
     BuildTrianglesAndAddToVirtualScene(&bananamodel);
 
-    //ObjModel bunnymodel("../../data/factory_building_2.obj");
-    //ObjModel bunnymodel("../../data/inf_building_v2.obj");
     ObjModel buildingmodel("../../data/obj_files/test_building.obj");
     ComputeNormals(&buildingmodel);
     BuildTrianglesAndAddToVirtualScene(&buildingmodel);
@@ -467,7 +466,7 @@ int main(int argc, char* argv[])
         std::exit(EXIT_FAILURE);
     }
 
-    float leafT = 0.0f;                 // nosso parâmetro t
+    float leafT = 0.0f;
     const float leafDuration = 2.0f;
 
     glm::vec4 player_position = glm::vec4(0.0f,0.2f,0.0f,1.0f);
@@ -533,9 +532,6 @@ int main(int argc, char* argv[])
             u.y = 0.0f;
             w = w/norm(w);
             u = u/norm(u);
-            // float currentTime = (float)glfwGetTime();
-            // float deltaTime = currentTime - g_LastFrameTime;
-            // g_LastFrameTime = currentTime;
 
             glm::vec4 old_delta = delta_camera;
             glm::vec4 movement = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -554,7 +550,7 @@ int main(int argc, char* argv[])
                 movement += w;
             }
 
-            //normalizando vetor de movimento para nao acelerar nas diagonais
+            // Normalize the movement vector to ensure consistent speed
             if(norm(movement)!=0)
             {
                 movement = speed*movement/norm(movement);
@@ -570,9 +566,6 @@ int main(int argc, char* argv[])
             closest_structure_index = getClosestBuildingIndex(glm::vec2(candidate_pos.x, candidate_pos.z));
             bool crossingWall = collisionCheckBuilding(glm::vec2(candidate_pos.x, candidate_pos.z), closest_structure_index);
             int crossingDoor = collisionCheckDoors(glm::vec2(candidate_pos.x, candidate_pos.z), closest_structure_index, 0.15f); // 0.15 is the collision radius for the door
-            //printf("crossingDoor: %d\n", crossingDoor);
-            // print door status to check if it is open
-            //printf("door status: %d\n", g_doorStatus[ closest_structure_index*2 + crossingDoor ].isOpen);
 
             bool doorOpen = false;
             if (crossingDoor != -1) {
@@ -699,7 +692,6 @@ int main(int argc, char* argv[])
 
 
         glm::vec4 delta_Gorilla_Player = player_position - g_gorillaPosition;
-        //printf("x: %f   y:  %f    z:  %f  \n", g_gorillaPosition.x,g_gorillaPosition.y,g_gorillaPosition.z);
         delta_Gorilla_Player.y = 0;
         if(norm(delta_Gorilla_Player )!=0)
 
@@ -710,9 +702,7 @@ int main(int argc, char* argv[])
 
         float yaw = atan2(delta_Gorilla_Player.x, delta_Gorilla_Player.z); 
 
-        
-        //printf("x: %f   y:  %f    z:  %f  \n", g_gorillaPosition.x,g_gorillaPosition.y,g_gorillaPosition.z);
-        // Desenhamos o modelo da esfera
+        // Draw gorilla
         model = Matrix_Translate(g_gorillaPosition.x,g_gorillaPosition.y,g_gorillaPosition.z)
         * Matrix_Rotate_Y(yaw-M_PI_2) ;
             //  * Matrix_Rotate_Z(0.6f)
@@ -769,10 +759,10 @@ int main(int argc, char* argv[])
             DrawVirtualObject("banana");
         }
 
-        // Tentar encaixar curva de bezier cubica para simular a queda da folha
-        leafT += g_deltaTime / leafDuration; // Incrementa o parâmetro t
+        // Cubic Bezier curve animation for the leaf
+        leafT += g_deltaTime / leafDuration; // Increment t
         if (leafT > 1.0f) {
-            leafT = 0.0f; // Reseta t para repetir a animação
+            leafT = 0.0f; // Reset t to repeat the animation
         }
         const glm::vec3 P0(-4.0f, 1.5f, 1.0f),
                         P1(-5.0f, 0.75f,1.0f),
@@ -783,117 +773,59 @@ int main(int argc, char* argv[])
 
         model = Matrix_Translate(pos.x,pos.y,pos.z)
                 * Matrix_Scale(0.8f, 0.8f, 0.8f);
-            //  * Matrix_Rotate_Z(0.6f)
-            //  * Matrix_Rotate_X(0.2f)
-            //  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, LEAF_04);
         DrawVirtualObject("Leaf_04");
 
-        // model = Matrix_Translate(-4.0f,1.5f,1.0f)
-        //         * Matrix_Scale(0.5f, 0.5f, 0.5f);
-        //     //  * Matrix_Rotate_Z(0.6f)
-        //     //  * Matrix_Rotate_X(0.2f)
-        //     //  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
-        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        // glUniform1i(g_object_id_uniform, LEAF_04);
-        // DrawVirtualObject("Leaf_04");
-
-        // model = Matrix_Translate(-4.0f,0.0185f,1.0f)
-        //         * Matrix_Scale(1.0f, 1.0f, 1.0f);
-        //     //  * Matrix_Rotate_Z(0.6f)
-        //     //  * Matrix_Rotate_X(0.2f)
-        //     //  * Matrix_Rotate_Y(g_AngleY + (float)glfwGetTime() * 0.1f);
-        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        // glUniform1i(g_object_id_uniform, LEAF_07);
-        // DrawVirtualObject("Leaf_07");
         float factor = 3.5;
         float buildingSize = 0.1111f*factor;
 
-        int doorInRange = collisionCheckDoors(glm::vec2(player_position.x, player_position.z), closest_structure_index, 0.8f);  // 0.4 is the max range to open a door
+        int doorInRange = collisionCheckDoors(glm::vec2(player_position.x, player_position.z), closest_structure_index, 0.8f);  // 0.8 is the max range to open a door
         if (g_EPressed && !g_doorStatus[closest_structure_index * 2 + doorInRange].animationOnGoing) {
             ma_engine_play_sound(&audioEngine, "../../data/audio_files/door_moving.wav", NULL); // Credits: https://freesound.org/people/ryanlouis/
-            //precisa colisao
             g_doorStatus[closest_structure_index * 2 + doorInRange].animationOnGoing = true;
         }
         
-        // Desenhamos o modelo do coelho
+        // We draw the five buildings
         model = Matrix_Translate(0.0f,0.0f,0.0f)
-              //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
-              //* Matrix_Rotate_X(1.57f)   // pi/2
-              //* Matrix_Rotate_Z(g_AngleZ)
-              //* Matrix_Rotate_Y(3.14f)   // pi
               * Matrix_Scale(buildingSize, buildingSize, buildingSize);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUILDING);
-        //DrawVirtualObject("the_bunny");
-        //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
-        //DrawVirtualObject("inf_building");
         DrawVirtualObject("test_building");
         drawDoor(model, 0);
 
-        // Desenhamos o modelo do coelho
         model = Matrix_Translate(5.0f*factor,0.0f,0.0f)
-              //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
-              //* Matrix_Rotate_X(1.57f)   // pi/2
-              //* Matrix_Rotate_Z(g_AngleZ)
-              //* Matrix_Rotate_Y(3.14f)   // pi
               * Matrix_Scale(buildingSize, buildingSize, buildingSize);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUILDING);
-        //DrawVirtualObject("the_bunny");
-        //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
-        //DrawVirtualObject("inf_building");
         DrawVirtualObject("test_building");
         drawDoor(model, 1);
 
-        // Desenhamos o modelo do coelho
         model = Matrix_Translate(-5.0f*factor,0.0f,0.0f)
-              //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
-              //* Matrix_Rotate_X(1.57f)   // pi/2
-              //* Matrix_Rotate_Z(g_AngleZ)
-              //* Matrix_Rotate_Y(3.14f)   // pi
               * Matrix_Scale(buildingSize, buildingSize, buildingSize);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUILDING);
-        //DrawVirtualObject("the_bunny");
-        //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
-        //DrawVirtualObject("inf_building");
         DrawVirtualObject("test_building");
         drawDoor(model, 2);
 
-        // Desenhamos o modelo do coelho
+        // The last two buildings are rotated 90 degrees
         model = Matrix_Translate(4.0f*factor,0.0f,6.0f*factor)
-              //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
-              //* Matrix_Rotate_X(1.57f)   // pi/2
-              //* Matrix_Rotate_Z(g_AngleZ)
-              * Matrix_Rotate_Y(1.57f)   // pi
+              * Matrix_Rotate_Y(1.57f)   // pi/2
               * Matrix_Scale(buildingSize, buildingSize, buildingSize);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUILDING);
-        //DrawVirtualObject("the_bunny");
-        //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
-        //DrawVirtualObject("inf_building");
         DrawVirtualObject("test_building");
         drawDoor(model, 3);
 
-        // Desenhamos o modelo do coelho
         model = Matrix_Translate(-4.0f*factor,0.0f,6.0f*factor)
-              //* Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f)
-              //* Matrix_Rotate_X(1.57f)   // pi/2
-              //* Matrix_Rotate_Z(g_AngleZ)
-              * Matrix_Rotate_Y(1.57f)   // pi
+              * Matrix_Rotate_Y(1.57f)   // pi/2
               * Matrix_Scale(buildingSize, buildingSize, buildingSize);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUILDING);
-        //DrawVirtualObject("the_bunny");
-        //DrawVirtualObject("factory_building_2");    // Importante colocar o nome certo!!
-        //DrawVirtualObject("inf_building");
         DrawVirtualObject("test_building");
         drawDoor(model, 4);
 
-        // Desenhamos o plano do chão
-        //model = Matrix_Translate(0.0f,-1.1f,0.0f);
+        // We draw the plane on the ground
         model = Matrix_Translate(0.0f,0.0f,0.0f)
               * Matrix_Scale(10.0f*factor, 10.0f*factor, 10.0f*factor);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
@@ -901,7 +833,7 @@ int main(int argc, char* argv[])
         DrawVirtualObject("the_plane");
 
 
-        // Modelo do cilindro para identificar a posição dos vértices das paredes
+        // Cylinder model to help pinpoint coordinates
         model = Matrix_Translate(g_AngleX,0.0f,g_AngleZ)
               * Matrix_Scale(0.05f, 1.0f, 0.05f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
@@ -947,7 +879,7 @@ int main(int argc, char* argv[])
 }
 //* Matrix_Translate(g_AngleX, 0.0f, g_AngleZ)
 
-//desenha porta
+// Draw the door
 void drawDoor(glm::mat4 model, int index)
 {
     if(g_doorStatus[index*2].animationOnGoing)
