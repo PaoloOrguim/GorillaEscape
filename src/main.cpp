@@ -456,6 +456,8 @@ int main(int argc, char* argv[])
 
     glm::vec4 player_position = glm::vec4(0.0f,0.2f,0.0f,1.0f);
 
+    int closest_structure_index = 0;
+
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     //LOOP
     while (!glfwWindowShouldClose(window))
@@ -547,10 +549,20 @@ int main(int argc, char* argv[])
             glm::vec4 new_delta = old_delta + movement;
             glm::vec4 candidate_pos = glm::vec4(0.0f, 0.2f, 0.0f, 1.0f) + new_delta;
 
-            int closest_structure_index = getClosestBuildingIndex(glm::vec2(candidate_pos.x, candidate_pos.z));
-            bool crossing = collisionCheckBuilding(glm::vec2(candidate_pos.x, candidate_pos.z), closest_structure_index);
+            closest_structure_index = getClosestBuildingIndex(glm::vec2(candidate_pos.x, candidate_pos.z));
+            bool crossingWall = collisionCheckBuilding(glm::vec2(candidate_pos.x, candidate_pos.z), closest_structure_index);
+            int crossingDoor = collisionCheckDoors(glm::vec2(candidate_pos.x, candidate_pos.z), closest_structure_index);
+            //printf("crossingDoor: %d\n", crossingDoor);
+            // print door status to check if it is open
+            printf("door status: %d\n", g_doorStatus[ closest_structure_index*2 + crossingDoor ].isOpen);
 
-            if (!crossing) {
+            bool doorOpen = false;
+            if (crossingDoor != -1) {
+                // If we collide with a door, we check if it is open
+                doorOpen = g_doorStatus[ closest_structure_index*2 + crossingDoor ].isOpen;
+            }
+
+            if (!crossingWall && (crossingDoor == -1 || doorOpen)) {
                 // If the camera is not crossing the line, we can move
                 delta_camera = new_delta;
             }
@@ -758,6 +770,7 @@ int main(int argc, char* argv[])
         // DrawVirtualObject("Leaf_07");
         float factor = 3.5;
         float buildingSize = 0.1111f*factor;
+
 
         if (g_EPressed && !g_doorStatus[0].animationOnGoing) {
             ma_engine_play_sound(&audioEngine, "../../data/audio_files/door_moving.wav", NULL); // Credits: https://freesound.org/people/ryanlouis/

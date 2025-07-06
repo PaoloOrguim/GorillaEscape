@@ -32,16 +32,21 @@ bool collisionCheckBuilding(
     int buildingIndex
 );
 
+int collisionCheckDoors(
+     const glm::vec2& playerPosition,
+     int buildingIndex
+);
+
 /*
 Paredes do prédio na origem (vértice inicial / vértice final)
 Paredes externas:
 X: 1.56; Z: 10.50 / X: 1.56; Z: -12.84
 X: 1.56; Z: -12.84 / X: -1.56; Z: -12.86
-X: -1.56; Z: -12.86 / X: -3.12; Z: -12.87 (PORTA!!!)
+X: -1.56; Z: -12.86 / X: -3.12; Z: -12.87 (PORTA!!!) porta indice 1
 X: -3.12; Z: -12.87 / X: -6.16; Z: -12.89
 X: -6.16; Z: -12.89 / X: -6.16; Z: 10.44
 X: -6.16; Z: 10.44 / X: -3.11; Z: 10.47
-X: -3.11; Z: 10.47 / X: -1.56; Z: 10.50 (PORTA !!!)
+X: -3.11; Z: 10.47 / X: -1.56; Z: 10.50 (PORTA !!!) porta indice 0
 X: -1.56; Z: 10.50 / X: 1.56; Z: 10.50
 Paredes internas:
 X: -1.56; Z: 10.50 / X: -1.56; Z: 4.65
