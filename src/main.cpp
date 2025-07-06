@@ -781,7 +781,7 @@ int main(int argc, char* argv[])
         float buildingSize = 0.1111f*factor;
 
         int doorInRange = collisionCheckDoors(glm::vec2(player_position.x, player_position.z), closest_structure_index, 0.8f);  // 0.8 is the max range to open a door
-        if (g_EPressed && !g_doorStatus[closest_structure_index * 2 + doorInRange].animationOnGoing) {
+        if (g_EPressed && !g_doorStatus[closest_structure_index * 2 + doorInRange].animationOnGoing && (doorInRange!=-1)) {
             ma_engine_play_sound(&audioEngine, "../../data/audio_files/door_moving.wav", NULL); // Credits: https://freesound.org/people/ryanlouis/
             g_doorStatus[closest_structure_index * 2 + doorInRange].animationOnGoing = true;
         }
