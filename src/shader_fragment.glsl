@@ -55,6 +55,15 @@ uniform sampler2D TextureImage7;    // door texture
 
 uniform int lantern_on;
 
+// ---------Fog uniforms ---------
+// ---- FOG uniforms ----
+uniform vec3  fogColor;     // cor da névoa (ex: vec3(0.7,0.7,0.8))
+uniform float fogStart;     // distância onde a névoa começa
+uniform float fogEnd;       // distância onde a névoa fica 100%
+uniform int   fogMode;      // 0 = linear, 1 = exp, 2 = exp2
+uniform float fogDensity;   // usado apenas em exp(−d·density) ou exp2
+// ---------Fog uniforms ---------
+
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
 
@@ -337,6 +346,30 @@ void main()
 
 
     color.rgb = diffuseFlashlight + ambient_term + phong_specular_term;    
+
+
+    // ---------- Fog effect ----------
+    // 1) calcula distância do fragmento à câmera
+    float dist = length((camera_position - p).xyz);
+
+    // 2) calcula fator de névoa
+    float fogFactor;
+    if (fogMode == 0) {
+        // linear
+        fogFactor = (fogEnd - dist) / (fogEnd - fogStart);
+    } else if (fogMode == 1) {
+        // exponencial
+        fogFactor = exp(-fogDensity * dist);
+    } else {
+        // exp2
+        fogFactor = exp(-fogDensity * fogDensity * dist * dist);
+    }
+    fogFactor = clamp(fogFactor, 0.0, 1.0);
+
+    // 3) mistura cor do fragmento com a névoa
+    vec3 finalRGB = mix(fogColor, color.rgb, fogFactor);
+    color.rgb     = finalRGB;
+    // ---------- Fog effect ----------
     
 
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é

@@ -652,6 +652,14 @@ int main(int argc, char* argv[])
 
         glUniform1i(g_lantern_uniform, g_LanternOn ? 1 : 0);
 
+        // ---------- Fog parameters ----------
+        glUniform3f(glGetUniformLocation(g_GpuProgramID, "fogColor"),    0.1f, 0.1f, 0.1f);
+        glUniform1f(glGetUniformLocation(g_GpuProgramID, "fogStart"),    3.0f);
+        glUniform1f(glGetUniformLocation(g_GpuProgramID, "fogEnd"),      10.0f);
+        glUniform1i(glGetUniformLocation(g_GpuProgramID, "fogMode"),     2);    // 0 = linear, 1 = exp, 2 = exp2
+        glUniform1f(glGetUniformLocation(g_GpuProgramID, "fogDensity"),  0.04f); // só para exp/exp2
+        // ---------- Fog parameters ----------
+
         #define BANANA 0
         #define GORILLA  1
         #define PLANE  2
