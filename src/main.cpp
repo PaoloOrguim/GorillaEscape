@@ -554,7 +554,7 @@ int main(int argc, char* argv[])
             int crossingDoor = collisionCheckDoors(glm::vec2(candidate_pos.x, candidate_pos.z), closest_structure_index);
             //printf("crossingDoor: %d\n", crossingDoor);
             // print door status to check if it is open
-            printf("door status: %d\n", g_doorStatus[ closest_structure_index*2 + crossingDoor ].isOpen);
+            //printf("door status: %d\n", g_doorStatus[ closest_structure_index*2 + crossingDoor ].isOpen);
 
             bool doorOpen = false;
             if (crossingDoor != -1) {
@@ -941,6 +941,7 @@ void drawDoor(glm::mat4 model, int index)
             g_doorStatus[index*2].doorOffset = g_doorStatus[index*2].isOpen ? 4.0f : 0.0f;
             g_doorStatus[index*2].animationOnGoing = false;
             g_doorStatus[index*2].isOpen = !g_doorStatus[index*2].isOpen;
+            printf("Door now: %d\n", g_doorStatus[index*2].isOpen);
         }
     }
     glm::mat4 model1 = model  * Matrix_Translate(-6.4f+g_doorStatus[index*2].doorOffset,0.0f,27.8f)
@@ -960,6 +961,7 @@ void drawDoor(glm::mat4 model, int index)
             g_doorStatus[index*2+1].doorOffset = g_doorStatus[index*2+1].isOpen ? 4.0f : 0.0f;
             g_doorStatus[index*2+1].animationOnGoing = false;
             g_doorStatus[index*2+1].isOpen = !g_doorStatus[index*2+1].isOpen;
+            printf("Door now: %d\n", g_doorStatus[index*2].isOpen);
         }
     }
     glm::mat4 model2 = model * Matrix_Translate(-6.6f+g_doorStatus[index*2+1].doorOffset,0.0f,-32.0f)
