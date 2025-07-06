@@ -551,7 +551,7 @@ int main(int argc, char* argv[])
 
             closest_structure_index = getClosestBuildingIndex(glm::vec2(candidate_pos.x, candidate_pos.z));
             bool crossingWall = collisionCheckBuilding(glm::vec2(candidate_pos.x, candidate_pos.z), closest_structure_index);
-            int crossingDoor = collisionCheckDoors(glm::vec2(candidate_pos.x, candidate_pos.z), closest_structure_index);
+            int crossingDoor = collisionCheckDoors(glm::vec2(candidate_pos.x, candidate_pos.z), closest_structure_index, 0.15f); // 0.15 is the collision radius for the door
             //printf("crossingDoor: %d\n", crossingDoor);
             // print door status to check if it is open
             //printf("door status: %d\n", g_doorStatus[ closest_structure_index*2 + crossingDoor ].isOpen);
@@ -771,32 +771,12 @@ int main(int argc, char* argv[])
         float factor = 3.5;
         float buildingSize = 0.1111f*factor;
 
-
-        if (g_EPressed && !g_doorStatus[1].animationOnGoing) {
+        int doorInRange = collisionCheckDoors(glm::vec2(player_position.x, player_position.z), closest_structure_index, 0.8f);  // 0.4 is the max range to open a door
+        if (g_EPressed && !g_doorStatus[closest_structure_index * 2 + doorInRange].animationOnGoing) {
             ma_engine_play_sound(&audioEngine, "../../data/audio_files/door_moving.wav", NULL); // Credits: https://freesound.org/people/ryanlouis/
             //precisa colisao
-            g_doorStatus[1].animationOnGoing = true;
-
-            //abrir portas
-            // for(int i = 0; i<10; i++)
-            // {
-            //     if(!g_doorStatus[i].animationOnGoing && colisao_perto_porta(i))
-            //     {
-            //         g_doorStatus[i].animationOnGoing = true;
-            //     }
-            // }
-
-
-            //detectar porta fechada
-            //g_doorStatus[i].isOpen
-
+            g_doorStatus[closest_structure_index * 2 + doorInRange].animationOnGoing = true;
         }
-
-        //if (g_EPressed && !g_doorStatus[1].animationOnGoing) {
-            //precisa colisao
-        //    g_doorStatus[1].animationOnGoing = true;
-
-        //}
         
         // Desenhamos o modelo do coelho
         model = Matrix_Translate(0.0f,0.0f,0.0f)

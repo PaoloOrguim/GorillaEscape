@@ -42,9 +42,10 @@ bool collisionCheckBoxSphere(
 bool collisionCheckCircleLine(
     const glm::vec2& lineStart,
     const glm::vec2& lineEnd,
-    const glm::vec2& circleCenter
+    const glm::vec2& circleCenter,
+    float circleRadius
 ) {
-    float circleRadius = 0.1f;
+    //float circleRadius = 0.1f;
     glm::vec2 AB = lineEnd   - lineStart;
     glm::vec2 AC = circleCenter - lineStart;
 
@@ -142,7 +143,7 @@ bool collisionCheckBuilding(
         glm::vec2 a = R * seg.first  + offset;
         glm::vec2 b = R * seg.second + offset;
 
-        if (collisionCheckCircleLine(a, b, playerCandidatePosition))
+        if (collisionCheckCircleLine(a, b, playerCandidatePosition, 0.15f))
             return true;
     }
     // If no collision was detected, we return false
@@ -160,7 +161,8 @@ bool collisionCheckBuilding(
 // is no collision with any door.
 int collisionCheckDoors(
      const glm::vec2& playerPosition,
-     int buildingIndex
+     int buildingIndex,
+     float collisionRadius
 ){
     static const std::vector<std::pair<glm::vec2, glm::vec2>> doors = {
         // Doors
@@ -208,7 +210,7 @@ int collisionCheckDoors(
         const auto& seg = doors[i];
         glm::vec2 a = R * seg.first  + offset;
         glm::vec2 b = R * seg.second + offset;
-        if (collisionCheckCircleLine(a, b, playerPosition)) {
+        if (collisionCheckCircleLine(a, b, playerPosition, collisionRadius)) {
             return int(i);  // retorna 0 ou 1 conforme o índice
         }
     }

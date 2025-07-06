@@ -24,7 +24,8 @@ bool collisionCheckBoxSphere(
 bool collisionCheckCircleLine(
     const glm::vec2& lineStart,
     const glm::vec2& lineEnd,
-    const glm::vec2& circleCenter
+    const glm::vec2& circleCenter,
+    float circleRadius
 );
 
 bool collisionCheckBuilding(
@@ -33,8 +34,9 @@ bool collisionCheckBuilding(
 );
 
 int collisionCheckDoors(
-     const glm::vec2& playerPosition,
-     int buildingIndex
+    const glm::vec2& playerPosition,
+    int buildingIndex,
+    float collisionRadius
 );
 
 /*
