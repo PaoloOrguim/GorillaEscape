@@ -217,3 +217,10 @@ int collisionCheckDoors(
     // If no collision was detected, we return -1
     return -1;
 }
+
+bool collisionCheckCircleCircle(const glm::vec2& centerA, float radiusA,
+                                const glm::vec2& centerB, float radiusB)
+{
+    float distance = glm::distance(centerA, centerB);
+    return distance <= (radiusA + radiusB);
+}

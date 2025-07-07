@@ -269,7 +269,8 @@ static const std::vector<glm::vec2> possibleSpawns = {
 };
 
 
-glm::vec4 delta_camera = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f); // Ponto "c", centro da câmera
+glm::vec4 delta_camera = glm::vec4(-2.40f, 0.0f, -25.20f, 0.0f); // Ponto "c", centro da câmera
+//glm::vec4 delta_camera = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f); // Ponto "c", centro da câmera
 
 glm::vec4 g_gorillaPosition = glm::vec4(-4.0f,0.5f,0.0f, 1.0f);
 
@@ -396,13 +397,13 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/texture_files/textures_V2/Leaves_04/Leaves_04_BaseColor.png"); // TextureImage5
     //LoadTextureImage("../../data/texture_files/textures_V2/Leaves_07/Leaves_07_BaseColor.png"); // TextureImage6
 
-    LoadCubemapTextures({
-        "../../data/texture_files/posx.jpg", // +X
-        "../../data/texture_files/negx.jpg",  // -X
-        "../../data/texture_files/posy.jpg",   // +Y
-        "../../data/texture_files/negy.jpg",// -Y
-        "../../data/texture_files/posz.jpg", // +Z
-        "../../data/texture_files/negz.jpg"   // -Z
+    LoadCubemapTextures({   //jpg
+        "../../data/texture_files/starmap_px.jpg", // +X
+        "../../data/texture_files/starmap_nx.jpg",  // -X
+        "../../data/texture_files/starmap_py.jpg",   // +Y
+        "../../data/texture_files/starmap_ny.jpg",// -Y
+        "../../data/texture_files/starmap_pz.jpg", // +Z
+        "../../data/texture_files/starmap_nz.jpg"   // -Z
     }); //TextureImage6
     LoadTextureImage("../../data/texture_files/DoorUV.png"); // TextureImage7
     LoadTextureImage("../../data/texture_files/sign_1.png"); // TextureImage8
@@ -477,6 +478,43 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Failed to initialize audio engine\n");
         std::exit(EXIT_FAILURE);
     }
+    ma_sound gorillaCloseSound;
+    ma_sound gorillaFarSound;
+    if (ma_sound_init_from_file(
+        &audioEngine,
+        "../../data/audio_files/gorilla_close_edited.wav",
+        MA_SOUND_FLAG_ASYNC | MA_SOUND_FLAG_LOOPING,
+        NULL,
+        NULL,
+        &gorillaCloseSound) != MA_SUCCESS)
+    {
+        fprintf(stderr, "Failed to load gorilla_close_edited.wav\n");
+        exit(-1);
+    }
+
+    if (ma_sound_init_from_file(
+            &audioEngine,
+            "../../data/audio_files/gorilla_far_edited.wav",
+            MA_SOUND_FLAG_ASYNC | MA_SOUND_FLAG_LOOPING,
+            NULL,
+            NULL,
+            &gorillaFarSound) != MA_SUCCESS)
+    {
+        fprintf(stderr, "Failed to load gorilla_far_edited.wav\n");
+        exit(-1);
+    }
+    static bool isPlayingClose = false;
+    static bool isPlayingFar   = false;
+    const float DIST_CLOSE_MAX     = 3.0f;   // from this distance, the close sound starts to play
+    const float DIST_FAR_MIN       = 5.0f;   // From this distance, the far sound plays at the highest volume
+    const float DIST_FAR_MAX       = 30.0f;  // From this distance, the far sound plays at the lowest volume
+    const float DIST_FAR_MIN_VOL   = 0.1f;   // Lowest volume for the far sound
+
+    // Coordinates of the corners of the map
+    const glm::vec2 A( 35.0f,  35.0f);
+    const glm::vec2 B(-35.0f, -35.0f);
+    const glm::vec2 C(-35.0f,  35.0f);
+    const glm::vec2 D( 35.0f, -35.0f);
 
     float leafT = 0.0f;
     const float leafDuration = 2.0f;
@@ -486,6 +524,9 @@ int main(int argc, char* argv[])
     int closest_structure_index = 0;
 
     initBananas();
+
+    // Gorilla close audio: Howler Monkey by Globofonia -- https://freesound.org/s/587776/ -- License: Attribution 4.0
+    // Gorilla far audio: Howler Monkeys by FlyingMarmot -- https://freesound.org/s/414248/ -- License: Creative Commons 0
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     //LOOP
@@ -585,10 +626,25 @@ int main(int argc, char* argv[])
                 doorOpen = g_doorStatus[ closest_structure_index*2 + crossingDoor ].isOpen;
             }
 
-            if (!crossingWall && (crossingDoor == -1 || doorOpen)) {
+            bool hitBoundary = 
+                                collisionCheckCircleLine(A, C, glm::vec2(candidate_pos.x, candidate_pos.z), 0.2) ||  // topo
+                                collisionCheckCircleLine(A, D, glm::vec2(candidate_pos.x, candidate_pos.z), 0.2) ||  // direita
+                                collisionCheckCircleLine(B, C, glm::vec2(candidate_pos.x, candidate_pos.z), 0.2) ||  // esquerda
+                                collisionCheckCircleLine(B, D, glm::vec2(candidate_pos.x, candidate_pos.z), 0.2);    // fundo
+
+
+            if (!crossingWall && (crossingDoor == -1 || doorOpen) && !hitBoundary) {
                 // If the camera is not crossing the line, we can move
                 delta_camera = new_delta;
             }
+
+            // Boundaries of the map to check for out of bound collision
+            // x 35 z -35
+            // x 35 z 35
+            // -35 -35
+            // -35 35
+            // Add some sorte of if (collision_with_boundaries) to the above conditional
+
 
 
             view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
@@ -715,9 +771,53 @@ int main(int argc, char* argv[])
 
         glm::vec4 delta_Gorilla_Player = player_position - g_gorillaPosition;
         delta_Gorilla_Player.y = 0;
-        if(norm(delta_Gorilla_Player )!=0)
 
-        float distance = sqrt(dot(delta_Gorilla_Player, delta_Gorilla_Player)); //DISTANCIA GORILA
+        float distance = 0.0f;
+        if(norm(delta_Gorilla_Player )!=0)
+            distance = sqrt(dot(delta_Gorilla_Player, delta_Gorilla_Player)); //DISTANCIA GORILA
+
+        if (distance <= DIST_CLOSE_MAX) {
+            // Som próximo
+            if (!isPlayingClose) {
+                ma_sound_start(&gorillaCloseSound);
+                isPlayingClose = true;
+            }
+            if (isPlayingFar) {
+                ma_sound_stop(&gorillaFarSound);
+                isPlayingFar = false;
+            }
+
+            // Volume fixo
+            ma_sound_set_volume(&gorillaCloseSound, 1.0f);
+        }
+        else {
+            // Som distante
+            if (!isPlayingFar) {
+                ma_sound_start(&gorillaFarSound);
+                isPlayingFar = true;
+            }
+            if (isPlayingClose) {
+                ma_sound_stop(&gorillaCloseSound);
+                isPlayingClose = false;
+            }
+
+            // Cálculo do volume variável de 1.0 até 0.1
+            float volume = 1.0f;
+
+            if (distance <= DIST_FAR_MIN) {
+                volume = 1.0f;
+            }
+            else if (distance >= DIST_FAR_MAX) {
+                volume = DIST_FAR_MIN_VOL;
+            }
+            else {
+                // Mapeia DIST_FAR_MIN → 1.0 e DIST_FAR_MAX → 0.1 (linear)
+                float t = (distance - DIST_FAR_MIN) / (DIST_FAR_MAX - DIST_FAR_MIN); // ∈ [0,1]
+                volume = 1.0f - t * (1.0f - DIST_FAR_MIN_VOL);
+            }
+
+            ma_sound_set_volume(&gorillaFarSound, volume);
+        }
 
         delta_Gorilla_Player = delta_Gorilla_Player / norm(delta_Gorilla_Player );
         g_gorillaPosition += delta_Gorilla_Player * g_deltaTime;
@@ -779,6 +879,24 @@ int main(int argc, char* argv[])
                             glm::value_ptr(model));
             glUniform1i(g_object_id_uniform, BANANA);
             DrawVirtualObject("banana");
+        }
+
+        bool allBananasCollected = true;
+        for (int i = 0; i < 6; ++i) {
+            if (!g_bananaStatus[i].collected) {
+                allBananasCollected = false;
+                break;
+            }
+        }
+
+        if (allBananasCollected) {
+            printf("You have escaped. This time.\n");
+            break; // Encerra o loop principal
+        }
+
+        if (collisionCheckCircleCircle(glm::vec2(player_position.x, player_position.z), 0.1, glm::vec2(g_gorillaPosition.x, g_gorillaPosition.z), 0.3)) {
+            printf("You have been killed by the gorilla.\n");
+            break; // termina o jogo
         }
 
         // Cubic Bezier curve animation for the leaf
@@ -910,6 +1028,8 @@ int main(int argc, char* argv[])
     // Finalizamos o uso dos recursos do sistema operacional
     glfwTerminate();
 
+    ma_sound_uninit(&gorillaCloseSound);
+    ma_sound_uninit(&gorillaFarSound);
     ma_engine_uninit(&audioEngine);
 
     // Fim do programa
@@ -1649,7 +1769,7 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 
 // Definição da função que será chamada sempre que o usuário pressionar alguma
 // tecla do teclado. Veja http://www.glfw.org/docs/latest/input_guide.html#input_key
-float delta = 0.1f;
+float delta = 5.0f;
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 {
     // ======================
@@ -1683,7 +1803,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_Y && action == GLFW_PRESS)
     {
         //g_AngleY += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-        delta = (mod & GLFW_MOD_SHIFT) ? 0.1f : 0.01f;
+        delta = (mod & GLFW_MOD_SHIFT) ? 5.0f : 1.0f;
         printf("delta = %.2f\n", delta);
     }
     if (key == GLFW_KEY_Z && action == GLFW_PRESS)
