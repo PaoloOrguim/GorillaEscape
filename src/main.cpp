@@ -509,8 +509,22 @@ int main(int argc, char* argv[])
     static bool isPlayingFar   = false;
     const float DIST_CLOSE_MAX     = 3.0f;   // from this distance, the close sound starts to play
     const float DIST_FAR_MIN       = 5.0f;   // From this distance, the far sound plays at the highest volume
-    const float DIST_FAR_MAX       = 30.0f;  // From this distance, the far sound plays at the lowest volume
-    const float DIST_FAR_MIN_VOL   = 0.1f;   // Lowest volume for the far sound
+    const float DIST_FAR_MAX       = 20.0f;  // From this distance, the far sound plays at the lowest volume
+    const float DIST_FAR_MIN_VOL   = 0.0f;   // Lowest volume for the far sound
+
+    ma_sound walkingSound;
+    if (ma_sound_init_from_file(
+            &audioEngine,
+            "../../data/audio_files/walkind_sound_edited.wav",
+            MA_SOUND_FLAG_ASYNC | MA_SOUND_FLAG_LOOPING,
+            NULL,
+            NULL,
+            &walkingSound) != MA_SUCCESS)
+    {
+        fprintf(stderr, "Failed to load %s\n", "../../data/audio_files/walking_sound_edited.wav");
+        exit(-1);
+    }
+    bool isWalking = false; // Flag to check if the player is walking
 
     // Coordinates of the corners of the map
     const glm::vec2 A( 35.0f,  35.0f);
@@ -529,6 +543,7 @@ int main(int argc, char* argv[])
 
     // Gorilla close audio: Howler Monkey by Globofonia -- https://freesound.org/s/587776/ -- License: Attribution 4.0
     // Gorilla far audio: Howler Monkeys by FlyingMarmot -- https://freesound.org/s/414248/ -- License: Creative Commons 0
+    // Walking sound: concrete_01a_barefeet_walk.wav by sturmankin -- https://freesound.org/s/272247/ -- License: Creative Commons 0
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     //LOOP
@@ -592,6 +607,7 @@ int main(int argc, char* argv[])
             glm::vec4 movement = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
             float speed = 2.5 * g_deltaTime;
             float bonus_speed = 1.5;
+            float pitch = 1.0f;
             if(g_WPressed){
                 movement-= w;
             }
@@ -608,11 +624,22 @@ int main(int argc, char* argv[])
             // Normalize the movement vector to ensure consistent speed
             if(norm(movement)!=0)
             {
+                isWalking = true; // Set walking flag to true if there is movement
                 movement = speed*movement/norm(movement);
                 if(g_SHIFTPressed)
                 {
+                    pitch = 1.5;
                     movement *= bonus_speed;
                 }
+                ma_sound_set_pitch(&walkingSound, pitch);
+            } else {
+                isWalking = false; // Set walking flag to false if there is no movement
+            }
+
+            if (isWalking && !ma_sound_is_playing(&walkingSound)) {
+                ma_sound_start(&walkingSound);
+            } else if (!isWalking && ma_sound_is_playing(&walkingSound)) {
+                ma_sound_stop(&walkingSound);
             }
 
             // ##################################################################################
@@ -939,7 +966,7 @@ int main(int argc, char* argv[])
 
         glm::vec3 pos = bezierCubic(leafT, P0,P1,P2,P3);
 
-        model = Matrix_Translate(pos.x,pos.y,pos.z)
+        model = Matrix_Translate(pos.x - 3.0f, pos.y, pos.z - 24.0f) // -2.0f,0.0f,-24.0f
                 * Matrix_Scale(0.8f, 0.8f, 0.8f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, LEAF_04);
@@ -1126,6 +1153,7 @@ int main(int argc, char* argv[])
     // Finalizamos o uso dos recursos do sistema operacional
     glfwTerminate();
 
+    ma_sound_uninit(&walkingSound);
     ma_sound_uninit(&gorillaCloseSound);
     ma_sound_uninit(&gorillaFarSound);
     ma_engine_uninit(&audioEngine);
