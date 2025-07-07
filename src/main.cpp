@@ -613,39 +613,63 @@ int main(int argc, char* argv[])
                 }
             }
 
-            glm::vec4 new_delta = old_delta + movement;
-            glm::vec4 candidate_pos = glm::vec4(0.0f, 0.2f, 0.0f, 1.0f) + new_delta;
+            // ##################################################################################
+            // INÍCIO DA MODIFICAÇÃO: Lógica de colisão com deslize (slide)
+            // ##################################################################################
+            // Em vez de testar a posição final de uma vez, testamos cada eixo (X e Z) separadamente.
+            // Isso permite que o jogador "deslize" ao longo de uma parede.
 
-            closest_structure_index = getClosestBuildingIndex(glm::vec2(candidate_pos.x, candidate_pos.z));
-            bool crossingWall = collisionCheckBuilding(glm::vec2(candidate_pos.x, candidate_pos.z), closest_structure_index);
-            int crossingDoor = collisionCheckDoors(glm::vec2(candidate_pos.x, candidate_pos.z), closest_structure_index, 0.15f); // 0.15 is the collision radius for the door
+            glm::vec4 new_delta = old_delta; // Começamos com a posição antiga
 
-            bool doorOpen = false;
-            if (crossingDoor != -1) {
-                // If we collide with a door, we check if it is open
-                doorOpen = g_doorStatus[ closest_structure_index*2 + crossingDoor ].isOpen;
+            // --- TESTE DE MOVIMENTO NO EIXO X ---
+            glm::vec4 candidate_pos_x = glm::vec4(0.0f, 0.2f, 0.0f, 1.0f) + glm::vec4(old_delta.x + movement.x, old_delta.y, old_delta.z, old_delta.w);
+            glm::vec2 player_coords_x(candidate_pos_x.x, candidate_pos_x.z);
+
+            int closest_idx_x = getClosestBuildingIndex(player_coords_x);
+            closest_structure_index = closest_idx_x; 
+            bool wall_hit_x = collisionCheckBuilding(player_coords_x, closest_idx_x);
+            int door_hit_idx_x = collisionCheckDoors(player_coords_x, closest_idx_x, 0.15f);
+            bool door_is_open_x = false;
+            if (door_hit_idx_x != -1) {
+                door_is_open_x = g_doorStatus[closest_idx_x * 2 + door_hit_idx_x].isOpen;
+            }
+            bool boundary_hit_x =
+                collisionCheckCircleLine(A, C, player_coords_x, 0.2) ||
+                collisionCheckCircleLine(A, D, player_coords_x, 0.2) ||
+                collisionCheckCircleLine(B, C, player_coords_x, 0.2) ||
+                collisionCheckCircleLine(B, D, player_coords_x, 0.2);
+
+            // Permite o movimento em X se não houver colisão com parede, nem com porta fechada, nem com borda.
+            if (!wall_hit_x && (door_hit_idx_x == -1 || door_is_open_x) && !boundary_hit_x) {
+                new_delta.x += movement.x;
             }
 
-            bool hitBoundary = 
-                                collisionCheckCircleLine(A, C, glm::vec2(candidate_pos.x, candidate_pos.z), 0.2) ||  // topo
-                                collisionCheckCircleLine(A, D, glm::vec2(candidate_pos.x, candidate_pos.z), 0.2) ||  // direita
-                                collisionCheckCircleLine(B, C, glm::vec2(candidate_pos.x, candidate_pos.z), 0.2) ||  // esquerda
-                                collisionCheckCircleLine(B, D, glm::vec2(candidate_pos.x, candidate_pos.z), 0.2);    // fundo
+            // --- TESTE DE MOVIMENTO NO EIXO Z ---
+            glm::vec4 candidate_pos_z = glm::vec4(0.0f, 0.2f, 0.0f, 1.0f) + glm::vec4(old_delta.x, old_delta.y, old_delta.z + movement.z, old_delta.w);
+            glm::vec2 player_coords_z(candidate_pos_z.x, candidate_pos_z.z);
 
+            int closest_idx_z = getClosestBuildingIndex(player_coords_z);
+            bool wall_hit_z = collisionCheckBuilding(player_coords_z, closest_idx_z);
+            int door_hit_idx_z = collisionCheckDoors(player_coords_z, closest_idx_z, 0.15f);
+            bool door_is_open_z = false;
+            if (door_hit_idx_z != -1) {
+                door_is_open_z = g_doorStatus[closest_idx_z * 2 + door_hit_idx_z].isOpen;
+            }
+            bool boundary_hit_z =
+                collisionCheckCircleLine(A, C, player_coords_z, 0.2) ||
+                collisionCheckCircleLine(A, D, player_coords_z, 0.2) ||
+                collisionCheckCircleLine(B, C, player_coords_z, 0.2) ||
+                collisionCheckCircleLine(B, D, player_coords_z, 0.2);
 
-            if (!crossingWall && (crossingDoor == -1 || doorOpen) && !hitBoundary) {
-                // If the camera is not crossing the line, we can move
-                delta_camera = new_delta;
+            // Permite o movimento em Z se não houver colisão com parede, nem com porta fechada, nem com borda.
+            if (!wall_hit_z && (door_hit_idx_z == -1 || door_is_open_z) && !boundary_hit_z) {
+                new_delta.z += movement.z;
             }
 
-            // Boundaries of the map to check for out of bound collision
-            // x 35 z -35
-            // x 35 z 35
-            // -35 -35
-            // -35 35
-            // Add some sorte of if (collision_with_boundaries) to the above conditional
-
-
+            delta_camera = new_delta; // Aplica o movimento que foi permitido
+            // ##################################################################################
+            // FIM DA MODIFICAÇÃO
+            // ##################################################################################
 
             view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
             player_position = camera_position_c;
