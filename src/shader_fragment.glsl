@@ -36,6 +36,8 @@ uniform mat4 projection;
 #define DOOR 9
 #define SIGN_1 10
 #define SIGN_2 11
+#define SIGN_3 12
+#define FENCE 13
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -55,6 +57,8 @@ uniform samplerCube TextureImage6; // Skybox cubemap texture
 uniform sampler2D TextureImage7;    // door texture
 uniform sampler2D TextureImage8;    // sign_1
 uniform sampler2D TextureImage9;    // sign_2
+uniform sampler2D TextureImage10;   // sign_3
+uniform sampler2D TextureImage11;   // fence
 
 uniform int lantern_on;
 
@@ -315,6 +319,28 @@ void main()
         V = texcoords.y;
         Kd0 = texture(TextureImage9, vec2(U,V)).rgb;
         texColor = texture(TextureImage9, vec2(U,V)).rgb;
+        Kd0 *= 0.1;
+        texColor *= 0.8;
+        //Ks1 = vec3(0.300000, 0.300000, 0.300000);
+        //q1 = 200.84916;
+    }
+    else if ( object_id == SIGN_3 )
+    {
+        U = texcoords.x;
+        V = texcoords.y;
+        Kd0 = texture(TextureImage10, vec2(U,V)).rgb;
+        texColor = texture(TextureImage10, vec2(U,V)).rgb;
+        Kd0 *= 0.1;
+        texColor *= 0.8;
+        //Ks1 = vec3(0.300000, 0.300000, 0.300000);
+        //q1 = 200.84916;
+    }
+    else if ( object_id == FENCE )
+    {
+        U = texcoords.x;
+        V = texcoords.y;
+        Kd0 = texture(TextureImage11, vec2(U,V)).rgb;
+        texColor = texture(TextureImage11, vec2(U,V)).rgb;
         Kd0 *= 0.1;
         texColor *= 0.8;
         //Ks1 = vec3(0.300000, 0.300000, 0.300000);

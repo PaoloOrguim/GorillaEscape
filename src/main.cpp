@@ -408,6 +408,8 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/texture_files/DoorUV.png"); // TextureImage7
     LoadTextureImage("../../data/texture_files/sign_1.png"); // TextureImage8
     LoadTextureImage("../../data/texture_files/sign_2.png"); // TextureImage9
+    LoadTextureImage("../../data/texture_files/sign_3.png"); // TextureImage10
+    LoadTextureImage("../../data/texture_files/fence.jpg"); // TextureImage11
 
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
@@ -451,9 +453,9 @@ int main(int argc, char* argv[])
     ComputeNormals(&sign1model);
     BuildTrianglesAndAddToVirtualScene(&sign1model);
 
-    ObjModel sign2model("../../data/obj_files/sign_2.obj");
-    ComputeNormals(&sign2model);
-    BuildTrianglesAndAddToVirtualScene(&sign2model);
+    ObjModel fencemodel("../../data/obj_files/fence.obj");  //https://www.cgtrader.com/items/3390648/download-page
+    ComputeNormals(&fencemodel);
+    BuildTrianglesAndAddToVirtualScene(&fencemodel);
 
     if ( argc > 1 )
     {
@@ -764,6 +766,8 @@ int main(int argc, char* argv[])
         #define DOOR 9
         #define SIGN_1 10
         #define SIGN_2 11
+        #define SIGN_3 12
+        #define FENCE 13
 
         // BEGIN MODIFICATION: Draw the Skybox
         // <eslgastal> The skybox exists in the world and is seen by
@@ -1018,7 +1022,77 @@ int main(int argc, char* argv[])
               * Matrix_Scale(0.1f, 0.12f, 0.15f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, SIGN_2);
-        DrawVirtualObject("sign2");
+        DrawVirtualObject("sign1");
+
+        // Cylinder model to help pinpoint coordinates
+        model = Matrix_Translate(-2.0f,0.0f,-24.0f)
+              * Matrix_Rotate_Y(1.57f)  // pi/2
+              * Matrix_Scale(0.1f, 0.12f, 0.15f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, SIGN_3);
+        DrawVirtualObject("sign1");
+
+        //Scale 0.1x e 0.15z: Vai do -35 até o -32.75, comprimento de 2.25
+        // model = Matrix_Translate(-33.60f,0.0f,-35.0f)
+        //       * Matrix_Rotate_Y(1.57f)  // pi/2
+        //       * Matrix_Scale(0.222f, 0.12f, 0.333f);    // Nessa escala a cerca mede 5 unidades, cabendo 14 cercas em 70 unidades (tamanho do mundo)
+        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        // glUniform1i(g_object_id_uniform, FENCE);
+        // DrawVirtualObject("fence");
+
+        // Antes do loop de desenho, defina estas constantes:
+        const int   FENCE_COUNT    = 14;
+        const float FENCE_SPACING  = 5.0f;          // cada cerca mede 5 unidades
+        const float START_OFFSET   = -33.60f;       // X ou Z inicial de cada lado
+        const float PI_2           = 1.5707963267948966f;
+        const glm::vec3 FENCE_SCALE(0.222f, 0.12f, 0.333f); // escala que dá 5u de comprimento
+
+        // Dentro do seu loop de render, onde você desenha os objetos:
+        glUniform1i(g_object_id_uniform, FENCE);
+
+        // ——— 1) Fundo (bottom edge), z = –35, cercas giradas 90° em Y
+        for (int i = 0; i < FENCE_COUNT; ++i) {
+            float x = START_OFFSET + i * FENCE_SPACING;
+            glm::mat4 model =
+                Matrix_Translate(x, 0.0f, -35.0f)
+            * Matrix_Rotate_Y(PI_2)
+            * Matrix_Scale(FENCE_SCALE.x, FENCE_SCALE.y, FENCE_SCALE.z);
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            DrawVirtualObject("fence");
+        }
+
+        // ——— 2) Topo (top edge), z = +35, mesma rotação de 90°
+        for (int i = 0; i < FENCE_COUNT; ++i) {
+            float x = START_OFFSET + i * FENCE_SPACING;
+            glm::mat4 model =
+                Matrix_Translate(x, 0.0f, +35.0f)
+            * Matrix_Rotate_Y(PI_2)
+            * Matrix_Scale(FENCE_SCALE.x, FENCE_SCALE.y, FENCE_SCALE.z);
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            DrawVirtualObject("fence");
+        }
+
+        // ——— 3) Lado esquerdo (left edge), x = –35, sem rotação em Y
+        for (int i = 0; i < FENCE_COUNT; ++i) {
+            float z = START_OFFSET + i * FENCE_SPACING;
+            glm::mat4 model =
+                Matrix_Translate(-35.0f, 0.0f, z)
+            * Matrix_Rotate_Y(0.0f)
+            * Matrix_Scale(FENCE_SCALE.x, FENCE_SCALE.y, FENCE_SCALE.z);
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            DrawVirtualObject("fence");
+        }
+
+        // ——— 4) Lado direito (right edge), x = +35, sem rotação em Y
+        for (int i = 0; i < FENCE_COUNT; ++i) {
+            float z = START_OFFSET + i * FENCE_SPACING;
+            glm::mat4 model =
+                Matrix_Translate(+35.0f, 0.0f, z)
+            * Matrix_Rotate_Y(0.0f)
+            * Matrix_Scale(FENCE_SCALE.x, FENCE_SCALE.y, FENCE_SCALE.z);
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            DrawVirtualObject("fence");
+        }
 
 
 
@@ -1245,6 +1319,8 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage7"), 7);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage8"), 8);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage9"), 9);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage10"), 10);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage11"), 11);
     //glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage6"), 6);
     glUseProgram(0);
 }
@@ -1793,7 +1869,7 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 
 // Definição da função que será chamada sempre que o usuário pressionar alguma
 // tecla do teclado. Veja http://www.glfw.org/docs/latest/input_guide.html#input_key
-float delta = 5.0f;
+float delta = 1.0f;
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
 {
     // ======================
@@ -1827,7 +1903,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_Y && action == GLFW_PRESS)
     {
         //g_AngleY += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-        delta = (mod & GLFW_MOD_SHIFT) ? 5.0f : 1.0f;
+        delta = (mod & GLFW_MOD_SHIFT) ? 1.0f : 0.1f;
         printf("delta = %.2f\n", delta);
     }
     if (key == GLFW_KEY_Z && action == GLFW_PRESS)
