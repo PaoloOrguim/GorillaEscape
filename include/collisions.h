@@ -27,6 +27,9 @@ int collisionCheckDoors(
     float collisionRadius
 );
 
+bool collisionCheckCircleCircle(const glm::vec2& centerA, float radiusA,
+                                const glm::vec2& centerB, float radiusB);
+
 /*
 Paredes do prédio na origem (vértice inicial / vértice final)
 Paredes externas:
