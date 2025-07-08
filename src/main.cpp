@@ -685,8 +685,8 @@ int main(int argc, char* argv[])
 
             int closest_idx_x = getClosestBuildingIndex(player_coords_x);
             closest_structure_index = closest_idx_x; 
-            bool wall_hit_x = collisionCheckBuilding(player_coords_x, closest_idx_x);
-            int door_hit_idx_x = collisionCheckDoors(player_coords_x, closest_idx_x, 0.15f);
+            bool wall_hit_x = collisionCheckBuilding(player_coords_x, closest_idx_x); //KEKO
+            int door_hit_idx_x = collisionCheckDoors(player_coords_x, closest_idx_x, 0.15f); //KEKO
             bool door_is_open_x = false;
             if (door_hit_idx_x != -1) {
                 door_is_open_x = g_doorStatus[closest_idx_x * 2 + door_hit_idx_x].isOpen;
@@ -707,8 +707,8 @@ int main(int argc, char* argv[])
             glm::vec2 player_coords_z(candidate_pos_z.x, candidate_pos_z.z);
 
             int closest_idx_z = getClosestBuildingIndex(player_coords_z);
-            bool wall_hit_z = collisionCheckBuilding(player_coords_z, closest_idx_z);
-            int door_hit_idx_z = collisionCheckDoors(player_coords_z, closest_idx_z, 0.15f);
+            bool wall_hit_z = collisionCheckBuilding(player_coords_z, closest_idx_z); //KEKO
+            int door_hit_idx_z = collisionCheckDoors(player_coords_z, closest_idx_z, 0.15f); //KEKO
             bool door_is_open_z = false;
             if (door_hit_idx_z != -1) {
                 door_is_open_z = g_doorStatus[closest_idx_z * 2 + door_hit_idx_z].isOpen;
@@ -910,8 +910,72 @@ int main(int argc, char* argv[])
         }
 
         delta_Gorilla_Player = delta_Gorilla_Player / norm(delta_Gorilla_Player );
-        g_gorillaPosition += delta_Gorilla_Player * g_deltaTime * powf(1.2f, g_bananasCollected);
+        //g_gorillaPosition += delta_Gorilla_Player * g_deltaTime * powf(1.2f, g_bananasCollected);
 
+
+        // ##################################################################################
+        // INÍCIO DA MODIFICAÇÃO: Lógica de colisão com deslize (slide)
+        // ##################################################################################
+        // Em vez de testar a posição final de uma vez, testamos cada eixo (X e Z) separadamente.
+        // Isso permite que o jogador "deslize" ao longo de uma parede.
+
+        glm::vec4 new_delta = g_gorillaPosition; // Começamos com a posição antiga
+        glm::vec4 movement = delta_Gorilla_Player * g_deltaTime * powf(1.15f, g_bananasCollected)*1.5f; // Começamos com a posição antiga
+
+        // --- TESTE DE MOVIMENTO NO EIXO X ---
+        glm::vec4 candidate_pos_x = glm::vec4(0.0f, 0.2f, 0.0f, 1.0f) + glm::vec4(g_gorillaPosition.x + movement.x, g_gorillaPosition.y, g_gorillaPosition.z, g_gorillaPosition.w);
+        glm::vec2 gorilla_coords_x(candidate_pos_x.x, candidate_pos_x.z);
+
+        int closest_idx_x = getClosestBuildingIndex(gorilla_coords_x);
+    
+        bool wall_hit_x = collisionCheckBuilding(gorilla_coords_x, closest_idx_x); //KEKO
+        int door_hit_idx_x = collisionCheckDoors(gorilla_coords_x, closest_idx_x, 0.15f); //KEKO
+        bool door_is_open_x = false;
+        if (door_hit_idx_x != -1) {
+            door_is_open_x = g_doorStatus[closest_idx_x * 2 + door_hit_idx_x].isOpen;
+        }
+        bool boundary_hit_x =
+            collisionCheckCircleLine(A, C, gorilla_coords_x, 0.2) ||
+            collisionCheckCircleLine(A, D, gorilla_coords_x, 0.2) ||
+            collisionCheckCircleLine(B, C, gorilla_coords_x, 0.2) ||
+            collisionCheckCircleLine(B, D, gorilla_coords_x, 0.2);
+
+        // Permite o movimento em X se não houver colisão com parede, nem com porta fechada, nem com borda.
+        if (!wall_hit_x && (door_hit_idx_x == -1 || door_is_open_x) && !boundary_hit_x) {
+            new_delta.x += movement.x;
+        }
+
+        // --- TESTE DE MOVIMENTO NO EIXO Z ---
+        glm::vec4 candidate_pos_z = glm::vec4(0.0f, 0.2f, 0.0f, 1.0f) + glm::vec4(g_gorillaPosition.x, g_gorillaPosition.y, g_gorillaPosition.z + movement.z, g_gorillaPosition.w);
+        glm::vec2 gorilla_coords_z(candidate_pos_z.x, candidate_pos_z.z);
+
+        int closest_idx_z = getClosestBuildingIndex(gorilla_coords_z);
+        bool wall_hit_z = collisionCheckBuilding(gorilla_coords_z, closest_idx_z); //KEKO
+        int door_hit_idx_z = collisionCheckDoors(gorilla_coords_z, closest_idx_z, 0.15f); //KEKO
+        bool door_is_open_z = false;
+        if (door_hit_idx_z != -1) {
+            door_is_open_z = g_doorStatus[closest_idx_z * 2 + door_hit_idx_z].isOpen;
+        }
+        bool boundary_hit_z =
+            collisionCheckCircleLine(A, C, gorilla_coords_z, 0.2) ||
+            collisionCheckCircleLine(A, D, gorilla_coords_z, 0.2) ||
+            collisionCheckCircleLine(B, C, gorilla_coords_z, 0.2) ||
+            collisionCheckCircleLine(B, D, gorilla_coords_z, 0.2);
+
+        // Permite o movimento em Z se não houver colisão com parede, nem com porta fechada, nem com borda.
+        if (!wall_hit_z && (door_hit_idx_z == -1 || door_is_open_z) && !boundary_hit_z) {
+            new_delta.z += movement.z;
+        }
+
+        g_gorillaPosition = new_delta; // Aplica o movimento que foi permitido
+        
+       
+        //printf("Gorilla position: %f \t %f \t %f\n", g_gorillaPosition.x, g_gorillaPosition.y, g_gorillaPosition.z);
+        // ##################################################################################
+        // FIM DA MODIFICAÇÃO
+        // ##################################################################################
+
+        
         float yaw = atan2(delta_Gorilla_Player.x, delta_Gorilla_Player.z);
 
         // Draw gorilla
