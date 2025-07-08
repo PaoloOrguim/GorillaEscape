@@ -411,6 +411,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/texture_files/sign_3.png"); // TextureImage10
     LoadTextureImage("../../data/texture_files/fence.jpg"); // TextureImage11
     LoadTextureImage("../../data/texture_files/trees_pack.jpg"); // TextureImage12
+    LoadTextureImage("../../data/texture_files/sign_4.png"); // TextureImage13
 
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
@@ -822,6 +823,7 @@ int main(int argc, char* argv[])
         #define SIGN_3 12
         #define FENCE 13
         #define TREE 14 // The trees use the same texture image, so we don't need to define them separately, as they'll use the same image in the fragment shader
+        #define SIGN_4 15
 
         // BEGIN MODIFICATION: Draw the Skybox
         // <eslgastal> The skybox exists in the world and is seen by
@@ -1084,6 +1086,14 @@ int main(int argc, char* argv[])
 
         // Cylinder model to help pinpoint coordinates
         model = Matrix_Translate(-2.0f,0.0f,-24.0f)
+              * Matrix_Rotate_Y(1.57f)  // pi/2
+              * Matrix_Scale(0.1f, 0.12f, 0.15f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, SIGN_4);
+        DrawVirtualObject("sign1");
+
+        // Cylinder model to help pinpoint coordinates
+        model = Matrix_Translate(-0.70f+-20.50f,0.0f,-12.90f)
               * Matrix_Rotate_Y(1.57f)  // pi/2
               * Matrix_Scale(0.1f, 0.12f, 0.15f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
@@ -1523,6 +1533,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage10"), 10);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage11"), 11);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage12"), 12);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage13"), 13);
     //glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage6"), 6);
     glUseProgram(0);
 }
