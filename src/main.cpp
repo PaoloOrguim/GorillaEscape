@@ -272,7 +272,7 @@ static const std::vector<glm::vec2> possibleSpawns = {
 glm::vec4 delta_camera = glm::vec4(-2.40f, 0.0f, -25.20f, 0.0f); // Ponto "c", centro da câmera
 //glm::vec4 delta_camera = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f); // Ponto "c", centro da câmera
 
-glm::vec4 g_gorillaPosition = glm::vec4(-4.0f,0.5f,0.0f, 1.0f);
+glm::vec4 g_gorillaPosition = glm::vec4(-17.0f,0.5f,17.0f, 1.0f);
 
 // Variáveis que definem a câmera em coordenadas esféricas, controladas pelo
 // usuário através do mouse (veja função CursorPosCallback()). A posição
@@ -410,6 +410,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/texture_files/sign_2.png"); // TextureImage9
     LoadTextureImage("../../data/texture_files/sign_3.png"); // TextureImage10
     LoadTextureImage("../../data/texture_files/fence.jpg"); // TextureImage11
+    LoadTextureImage("../../data/texture_files/trees_pack.jpg"); // TextureImage12
 
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
@@ -456,6 +457,28 @@ int main(int argc, char* argv[])
     ObjModel fencemodel("../../data/obj_files/fence.obj");  //https://www.cgtrader.com/items/3390648/download-page
     ComputeNormals(&fencemodel);
     BuildTrianglesAndAddToVirtualScene(&fencemodel);
+
+    // Credits for the tree models: https://www.turbosquid.com/3d-models/3d-model-trees-pack/1091559
+
+    ObjModel tree1model("../../data/obj_files/tree_1.obj");
+    ComputeNormals(&tree1model);
+    BuildTrianglesAndAddToVirtualScene(&tree1model);
+
+    ObjModel tree2model("../../data/obj_files/tree_2.obj");
+    ComputeNormals(&tree2model);
+    BuildTrianglesAndAddToVirtualScene(&tree2model);
+
+    ObjModel tree3model("../../data/obj_files/tree_3.obj");
+    ComputeNormals(&tree3model);
+    BuildTrianglesAndAddToVirtualScene(&tree3model);
+
+    ObjModel treetrunk1model("../../data/obj_files/tree_trunk_1.obj");
+    ComputeNormals(&treetrunk1model);
+    BuildTrianglesAndAddToVirtualScene(&treetrunk1model);
+
+    ObjModel treetrunk2model("../../data/obj_files/tree_trunk_2.obj");
+    ComputeNormals(&treetrunk2model);
+    BuildTrianglesAndAddToVirtualScene(&treetrunk2model);
 
     if ( argc > 1 )
     {
@@ -538,6 +561,9 @@ int main(int argc, char* argv[])
     glm::vec4 player_position = glm::vec4(0.0f,0.2f,0.0f,1.0f); // Arrumar spawn para X: -2.40; Z: -25.20
 
     int closest_structure_index = 0;
+
+    static float skyboxAngle = 0.0f;
+    const float SKYBOX_ROT_SPEED = glm::radians(1.0f);
 
     initBananas();
 
@@ -795,12 +821,17 @@ int main(int argc, char* argv[])
         #define SIGN_2 11
         #define SIGN_3 12
         #define FENCE 13
+        #define TREE 14 // The trees use the same texture image, so we don't need to define them separately, as they'll use the same image in the fragment shader
 
         // BEGIN MODIFICATION: Draw the Skybox
         // <eslgastal> The skybox exists in the world and is seen by
         // the same camera as the other objects, so preserve the same
         // view matrix.
-        glm::mat4 skybox_view = view;
+
+        skyboxAngle += SKYBOX_ROT_SPEED * g_deltaTime;
+        glm::mat4 skybox_rotation = Matrix_Rotate_Y(skyboxAngle);
+        // Apply the rotation to the skybox model matrix
+        glm::mat4 skybox_view = skybox_rotation * view;
         // <eslgastal> Move the skybox with the camera/player, to give
         // the illustion of being "at infinity."
         glm::mat4 skybox_model =
@@ -950,8 +981,8 @@ int main(int argc, char* argv[])
         }
 
         if (collisionCheckCircleCircle(glm::vec2(player_position.x, player_position.z), 0.1, glm::vec2(g_gorillaPosition.x, g_gorillaPosition.z), 0.3)) {
-            printf("You have been killed by the gorilla.\n");
-            break; // termina o jogo
+            //printf("You have been killed by the gorilla.\n");
+            //break; // termina o jogo
         }
 
         // Cubic Bezier curve animation for the leaf
@@ -1029,11 +1060,11 @@ int main(int argc, char* argv[])
 
 
         // Cylinder model to help pinpoint coordinates
-        model = Matrix_Translate(g_AngleX,0.0f,g_AngleZ)
-              * Matrix_Scale(0.05f, 1.0f, 0.05f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, CYLINDER);
-        DrawVirtualObject("cylinder");
+        // model = Matrix_Translate(g_AngleX,0.0f,g_AngleZ)
+        //       * Matrix_Scale(0.05f, 1.0f, 0.05f);
+        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        // glUniform1i(g_object_id_uniform, CYLINDER);
+        // DrawVirtualObject("cylinder");
 
         // Cylinder model to help pinpoint coordinates
         model = Matrix_Translate(-0.70f,0.0f,-12.90f)
@@ -1048,7 +1079,7 @@ int main(int argc, char* argv[])
               * Matrix_Rotate_Y(1.57f)  // pi/2
               * Matrix_Scale(0.1f, 0.12f, 0.15f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, SIGN_2);
+        glUniform1i(g_object_id_uniform, SIGN_3);
         DrawVirtualObject("sign1");
 
         // Cylinder model to help pinpoint coordinates
@@ -1056,7 +1087,7 @@ int main(int argc, char* argv[])
               * Matrix_Rotate_Y(1.57f)  // pi/2
               * Matrix_Scale(0.1f, 0.12f, 0.15f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, SIGN_3);
+        glUniform1i(g_object_id_uniform, SIGN_2);
         DrawVirtualObject("sign1");
 
         //Scale 0.1x e 0.15z: Vai do -35 até o -32.75, comprimento de 2.25
@@ -1072,6 +1103,7 @@ int main(int argc, char* argv[])
         const float FENCE_SPACING  = 5.0f;          // cada cerca mede 5 unidades
         const float START_OFFSET   = -33.60f;       // X ou Z inicial de cada lado
         const float PI_2           = 1.5707963267948966f;
+        const float PI             = 3.14159f;
         const glm::vec3 FENCE_SCALE(0.222f, 0.12f, 0.333f); // escala que dá 5u de comprimento
 
         // Dentro do seu loop de render, onde você desenha os objetos:
@@ -1120,6 +1152,147 @@ int main(int argc, char* argv[])
             glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             DrawVirtualObject("fence");
         }
+
+        // -4, 10 --- -5, 38 --- 12, 43
+        model = Matrix_Translate(-3.40f-4, 0.0f, -25.20f+10) // -2.40f, 0.0f, -25.20f, 0.0f  <---- player spawn
+              * Matrix_Rotate_Y(PI)
+              * Matrix_Scale(0.3f, 0.50f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("tree1");
+        model = Matrix_Translate(-3.40f-5, 0.0f, -25.20f+38) // -2.40f, 0.0f, -25.20f, 0.0f  <---- player spawn
+              * Matrix_Rotate_Y(PI/2)
+              * Matrix_Scale(0.3f, 0.50f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("tree1");
+        model = Matrix_Translate(-3.40f+12, 0.0f, -25.20f+43) // -2.40f, 0.0f, -25.20f, 0.0f  <---- player spawn
+              * Matrix_Rotate_Y(PI/3)
+              * Matrix_Scale(0.3f, 0.50f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("tree1");
+
+        // 26, -2 --- 34, 36 --- -23, 41
+        model = Matrix_Translate(-5.40f+26, 0.0f, -25.20f-2)
+              * Matrix_Scale(0.3f, 0.40f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("tree2");
+        model = Matrix_Translate(-5.40f+34, 0.0f, -25.20f+36)
+              * Matrix_Rotate_Y(PI/4)
+              * Matrix_Scale(0.3f, 0.40f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("tree2");
+        model = Matrix_Translate(-5.40f-23, 0.0f, -25.20f+41)
+              * Matrix_Rotate_Y(PI/6)
+              * Matrix_Scale(0.3f, 0.40f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("tree2");
+
+        // -22, 2 --- -23, 24 --- 6, 55
+        model = Matrix_Translate(-7.40f-22, 0.0f, -25.20f+2)
+              * Matrix_Rotate_Y(PI)
+              * Matrix_Scale(0.3f, 0.40f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("tree3");
+        model = Matrix_Translate(-7.40f-23, 0.0f, -25.20f+24)
+              * Matrix_Scale(0.3f, 0.40f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("tree3");
+        model = Matrix_Translate(-7.40f+6, 0.0f, -25.20f+55)
+              * Matrix_Rotate_Y(PI/3)
+              * Matrix_Scale(0.3f, 0.40f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("tree3");
+
+        // -8, 12.2 --- 23, 35.8 --- 9, 35.8 --- Com PI_2 rotação: -6.4, 17 --- 10.30, 45.70 --- 20.50, 31
+        model = Matrix_Translate(-9.40f-8.0f, 0.0f, -25.20f+12.20f)
+              * Matrix_Scale(0.3f, 0.36f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("treetrunk1");
+        model = Matrix_Translate(-9.40f+23.0f, 0.0f, -25.20f+35.80f)
+              * Matrix_Scale(0.3f, 0.36f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("treetrunk1");
+        model = Matrix_Translate(-9.40f+9.0f, 0.0f, -25.20f+35.80f)
+              * Matrix_Scale(0.3f, 0.36f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("treetrunk1");
+        model = Matrix_Translate(-9.40f-6.4f, 0.0f, -25.20f+17.0f)
+              * Matrix_Rotate_Y(PI_2)
+              * Matrix_Scale(0.3f, 0.36f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("treetrunk1");
+        model = Matrix_Translate(-9.40f+10.30f, 0.0f, -25.20f+45.70f)
+              * Matrix_Rotate_Y(PI_2)
+              * Matrix_Scale(0.3f, 0.36f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("treetrunk1");
+        model = Matrix_Translate(-9.40f+20.50f, 0.0f, -25.20f+31.0f)
+              * Matrix_Rotate_Y(PI_2)
+              * Matrix_Scale(0.3f, 0.36f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("treetrunk1");
+
+        // -2, 3 --- 16, 10 --- 21, 23 --- 16, 35 --- 37, 17 --- 40, 56 --- 19, 58 --- -14, 56
+        model = Matrix_Translate(-11.40f-2.0f, 0.0f, -25.20f+3.0f)
+              * Matrix_Scale(0.3f, 0.36f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("treetrunk2");
+        model = Matrix_Translate(-11.40f+16.0f, 0.0f, -25.20f+10.0f)
+              * Matrix_Rotate_Y(PI)
+              * Matrix_Scale(0.3f, 0.36f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("treetrunk2");
+        model = Matrix_Translate(-11.40f+21.0f, 0.0f, -25.20f+23.0f)
+              * Matrix_Rotate_Y(PI/2)
+              * Matrix_Scale(0.3f, 0.36f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("treetrunk2");
+        model = Matrix_Translate(-11.40f+16.0f, 0.0f, -25.20f+35.0f)
+              * Matrix_Rotate_Y(PI/3)
+              * Matrix_Scale(0.3f, 0.36f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("treetrunk2");
+        model = Matrix_Translate(-11.40f+37.0f, 0.0f, -25.20f+17.0f)
+              * Matrix_Rotate_Y(PI/4)
+              * Matrix_Scale(0.3f, 0.36f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("treetrunk2");
+        model = Matrix_Translate(-11.40f+40.0f, 0.0f, -25.20f+56.0f)
+              * Matrix_Rotate_Y(PI/6)
+              * Matrix_Scale(0.3f, 0.36f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("treetrunk2");
+        model = Matrix_Translate(-11.40f+19.0f, 0.0f, -25.20f+58.0f)
+              * Matrix_Rotate_Y(PI)
+              * Matrix_Scale(0.3f, 0.36f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("treetrunk2");
+        model = Matrix_Translate(-11.40f-14.0f, 0.0f, -25.20f+56.0f)
+              * Matrix_Scale(0.3f, 0.36f, 0.45f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE);
+        DrawVirtualObject("treetrunk2");
 
 
 
@@ -1349,6 +1522,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage9"), 9);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage10"), 10);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage11"), 11);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage12"), 12);
     //glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage6"), 6);
     glUseProgram(0);
 }
