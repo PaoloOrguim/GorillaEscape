@@ -243,6 +243,8 @@ bool g_LanternOn = true;
 
 bool g_doorAnimationOnGoing = false;
 
+int g_bananasCollected = 0;
+
 struct DoorStatus
 {
     bool isOpen = false;
@@ -908,7 +910,7 @@ int main(int argc, char* argv[])
         }
 
         delta_Gorilla_Player = delta_Gorilla_Player / norm(delta_Gorilla_Player );
-        g_gorillaPosition += delta_Gorilla_Player * g_deltaTime;
+        g_gorillaPosition += delta_Gorilla_Player * g_deltaTime * powf(1.2f, g_bananasCollected);
 
         float yaw = atan2(delta_Gorilla_Player.x, delta_Gorilla_Player.z);
 
@@ -949,6 +951,7 @@ int main(int argc, char* argv[])
             // If the player is colliding with the banana and the E key is pressed, collect it
             if (hit && g_EPressed) {
                 b.collected = true;
+                g_bananasCollected ++;
                 printf("Banana %d coletada em (%.2f, %.2f)!\n",
                     i, b.center.x, b.center.y);
                 ma_engine_play_sound(
@@ -969,15 +972,7 @@ int main(int argc, char* argv[])
             DrawVirtualObject("banana");
         }
 
-        bool allBananasCollected = true;
-        for (int i = 0; i < 6; ++i) {
-            if (!g_bananaStatus[i].collected) {
-                allBananasCollected = false;
-                break;
-            }
-        }
-
-        if (allBananasCollected) {
+        if (g_bananasCollected >= 6) {
             printf("You have escaped. This time.\n");
             break; // Encerra o loop principal
         }
