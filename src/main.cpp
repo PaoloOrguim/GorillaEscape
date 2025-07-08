@@ -559,7 +559,7 @@ int main(int argc, char* argv[])
     const glm::vec2 D( 35.0f, -35.0f);
 
     float leafT = 0.0f;
-    const float leafDuration = 2.0f;
+    const float leafDuration = 4.0f;
 
     glm::vec4 player_position = glm::vec4(0.0f,0.2f,0.0f,1.0f); // Arrumar spawn para X: -2.40; Z: -25.20
 
@@ -1059,7 +1059,16 @@ int main(int argc, char* argv[])
         glm::vec3 pos = bezierCubic(leafT, P0,P1,P2,P3);
 
         model = Matrix_Translate(pos.x - 3.0f, pos.y, pos.z - 24.0f) // -2.0f,0.0f,-24.0f
-                * Matrix_Scale(0.8f, 0.8f, 0.8f);
+                * Matrix_Scale(4.8f, 4.8f, 4.8f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, LEAF_04);
+        DrawVirtualObject("Leaf_04");
+
+        model = Matrix_Translate(pos.x - 3.0f, pos.y, pos.z - 24.0f) // -2.0f,0.0f,-24.0f
+                * Matrix_Rotate_X(M_PI)
+                * Matrix_Rotate_Y(M_PI)
+                * Matrix_Rotate_Z(M_PI)
+                * Matrix_Scale(4.8f, 4.8f, 4.8f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, LEAF_04);
         DrawVirtualObject("Leaf_04");
@@ -1119,15 +1128,7 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
-
-        // Cylinder model to help pinpoint coordinates
-        // model = Matrix_Translate(g_AngleX,0.0f,g_AngleZ)
-        //       * Matrix_Scale(0.05f, 1.0f, 0.05f);
-        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        // glUniform1i(g_object_id_uniform, CYLINDER);
-        // DrawVirtualObject("cylinder");
-
-        // Cylinder model to help pinpoint coordinates
+        // Sign model to help pinpoint coordinates
         model = Matrix_Translate(-0.70f,0.0f,-12.90f)
               * Matrix_Rotate_Y(1.57f)  // pi/2
               * Matrix_Scale(0.1f, 0.12f, 0.15f);
@@ -1135,7 +1136,7 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, SIGN_1);
         DrawVirtualObject("sign1");
 
-        // Cylinder model to help pinpoint coordinates
+        // Sign model to help pinpoint coordinates
         model = Matrix_Translate(13.70f,0.0f,-12.90f)
               * Matrix_Rotate_Y(1.57f)  // pi/2
               * Matrix_Scale(0.1f, 0.12f, 0.15f);
@@ -1143,7 +1144,7 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, SIGN_3);
         DrawVirtualObject("sign1");
 
-        // Cylinder model to help pinpoint coordinates
+        // Sign model to help pinpoint coordinates
         model = Matrix_Translate(-2.0f,0.0f,-24.0f)
               * Matrix_Rotate_Y(1.57f)  // pi/2
               * Matrix_Scale(0.1f, 0.12f, 0.15f);
@@ -1151,21 +1152,13 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, SIGN_4);
         DrawVirtualObject("sign1");
 
-        // Cylinder model to help pinpoint coordinates
+        // Sign model to help pinpoint coordinates
         model = Matrix_Translate(-0.70f+-20.50f,0.0f,-12.90f)
               * Matrix_Rotate_Y(1.57f)  // pi/2
               * Matrix_Scale(0.1f, 0.12f, 0.15f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, SIGN_2);
         DrawVirtualObject("sign1");
-
-        //Scale 0.1x e 0.15z: Vai do -35 até o -32.75, comprimento de 2.25
-        // model = Matrix_Translate(-33.60f,0.0f,-35.0f)
-        //       * Matrix_Rotate_Y(1.57f)  // pi/2
-        //       * Matrix_Scale(0.222f, 0.12f, 0.333f);    // Nessa escala a cerca mede 5 unidades, cabendo 14 cercas em 70 unidades (tamanho do mundo)
-        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        // glUniform1i(g_object_id_uniform, FENCE);
-        // DrawVirtualObject("fence");
 
         // Antes do loop de desenho, defina estas constantes:
         const int   FENCE_COUNT    = 14;
