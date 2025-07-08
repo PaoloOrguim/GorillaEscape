@@ -10,7 +10,7 @@ layout (location = 2) in vec2 texture_coefficients;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform sampler2D TextureImage2;    // Grass
+uniform sampler2D TextureImage12;    // Grass
 
 // Atributos de vértice que serão gerados como saída ("out") pelo Vertex Shader.
 // ** Estes serão interpolados pelo rasterizador! ** gerando, assim, valores
@@ -105,9 +105,9 @@ void main()
     U = texcoords.x;
     V = texcoords.y;
 
-    vec3 Kd = texture(TextureImage2, vec2(U,V)).rgb;
+    vec3 Kd = texture(TextureImage12, vec2(U,V)).rgb;
     vec3 Ks = vec3(0.0);
-    vec3 Ka = texture(TextureImage2, vec2(U,V)).rgb;                // ambiente proporcional ao difuso
+    vec3 Ka = texture(TextureImage12, vec2(U,V)).rgb;          
 
     float lambert = max(dot(n,l),0.0);
     float spec    = pow(max(dot(r,v),0.0), shininess);

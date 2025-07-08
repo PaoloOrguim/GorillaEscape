@@ -216,26 +216,7 @@ void main()
     }
     else if ( object_id == GORILLA )
     {
-        // PREENCHA AQUI as coordenadas de textura do coelho, computadas com
-        // projeção planar XY em COORDENADAS DO MODELO. Utilize como referência
-        // o slides 99-104 do documento Aula_20_Mapeamento_de_Texturas.pdf,
-        // e também use as variáveis min*/max* definidas abaixo para normalizar
-        // as coordenadas de textura U e V dentro do intervalo [0,1]. Para
-        // tanto, veja por exemplo o mapeamento da variável 'p_v' utilizando
-        // 'h' no slides 158-160 do documento Aula_20_Mapeamento_de_Texturas.pdf.
-        // Veja também a Questão 4 do Questionário 4 no Moodle.
-
-        // float minx = bbox_min.x;
-        // float maxx = bbox_max.x;
-
-        // float miny = bbox_min.y;
-        // float maxy = bbox_max.y;
-
-        // float minz = bbox_min.z;
-        // float maxz = bbox_max.z;
-
-        // U = (position_model.x - minx) / (maxx - minx);  // Vide questionario 4 - questao 4
-        // V = (position_model.y - miny) / (maxy - miny);
+       
         U = texcoords.x; 
         V = texcoords.y;
         Kd0 = texture(TextureImage1, vec2(U,V)).rgb;
@@ -245,10 +226,7 @@ void main()
         
         //deixar o gorila mais sombrio
         Kd0 *= 0.1;
-        //U = 0.0;
-        //V = 0.0;
-        //color = vec4(gouraudColor, 1.0);    // usa cor interpolada
-        //return;
+        
 
     }
     else if ( object_id == BUILDING )
@@ -363,12 +341,9 @@ void main()
     }
     else if ( object_id == TREE )
     {
-        U = texcoords.x;
-        V = texcoords.y;
-        Kd0 = texture(TextureImage12, vec2(U,V)).rgb;
-        texColor = texture(TextureImage12, vec2(U,V)).rgb;
-        Kd0 *= 0.1;
-        texColor *= 0.8;
+
+        texColor = gouraudColor;
+        Kd0 = gouraudColor;
         //Ks1 = vec3(0.300000, 0.300000, 0.300000);
         //q1 = 200.84916;
     }
@@ -421,8 +396,9 @@ void main()
 
     //testes lanterna nova fim
 
-
-    color.rgb = diffuseFlashlight + ambient_term + phong_specular_term;    
+    color.rgb = diffuseFlashlight + ambient_term + phong_specular_term; 
+    
+    
 
 
     // ---------- Fog effect ----------
