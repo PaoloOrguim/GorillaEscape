@@ -685,8 +685,8 @@ int main(int argc, char* argv[])
 
             int closest_idx_x = getClosestBuildingIndex(player_coords_x);
             closest_structure_index = closest_idx_x; 
-            bool wall_hit_x = collisionCheckBuilding(player_coords_x, closest_idx_x); //KEKO
-            int door_hit_idx_x = collisionCheckDoors(player_coords_x, closest_idx_x, 0.15f); //KEKO
+            bool wall_hit_x = collisionCheckBuilding(player_coords_x, closest_idx_x); 
+            int door_hit_idx_x = collisionCheckDoors(player_coords_x, closest_idx_x, 0.15f);
             bool door_is_open_x = false;
             if (door_hit_idx_x != -1) {
                 door_is_open_x = g_doorStatus[closest_idx_x * 2 + door_hit_idx_x].isOpen;
@@ -707,8 +707,8 @@ int main(int argc, char* argv[])
             glm::vec2 player_coords_z(candidate_pos_z.x, candidate_pos_z.z);
 
             int closest_idx_z = getClosestBuildingIndex(player_coords_z);
-            bool wall_hit_z = collisionCheckBuilding(player_coords_z, closest_idx_z); //KEKO
-            int door_hit_idx_z = collisionCheckDoors(player_coords_z, closest_idx_z, 0.15f); //KEKO
+            bool wall_hit_z = collisionCheckBuilding(player_coords_z, closest_idx_z); 
+            int door_hit_idx_z = collisionCheckDoors(player_coords_z, closest_idx_z, 0.15f); 
             bool door_is_open_z = false;
             if (door_hit_idx_z != -1) {
                 door_is_open_z = g_doorStatus[closest_idx_z * 2 + door_hit_idx_z].isOpen;
@@ -928,8 +928,8 @@ int main(int argc, char* argv[])
 
         int closest_idx_x = getClosestBuildingIndex(gorilla_coords_x);
     
-        bool wall_hit_x = collisionCheckBuilding(gorilla_coords_x, closest_idx_x); //KEKO
-        int door_hit_idx_x = collisionCheckDoors(gorilla_coords_x, closest_idx_x, 0.15f); //KEKO
+        bool wall_hit_x = collisionCheckBuilding(gorilla_coords_x, closest_idx_x); 
+        int door_hit_idx_x = collisionCheckDoors(gorilla_coords_x, closest_idx_x, 0.15f); 
         bool door_is_open_x = false;
         if (door_hit_idx_x != -1) {
             door_is_open_x = g_doorStatus[closest_idx_x * 2 + door_hit_idx_x].isOpen;
@@ -950,8 +950,8 @@ int main(int argc, char* argv[])
         glm::vec2 gorilla_coords_z(candidate_pos_z.x, candidate_pos_z.z);
 
         int closest_idx_z = getClosestBuildingIndex(gorilla_coords_z);
-        bool wall_hit_z = collisionCheckBuilding(gorilla_coords_z, closest_idx_z); //KEKO
-        int door_hit_idx_z = collisionCheckDoors(gorilla_coords_z, closest_idx_z, 0.15f); //KEKO
+        bool wall_hit_z = collisionCheckBuilding(gorilla_coords_z, closest_idx_z); 
+        int door_hit_idx_z = collisionCheckDoors(gorilla_coords_z, closest_idx_z, 0.15f); 
         bool door_is_open_z = false;
         if (door_hit_idx_z != -1) {
             door_is_open_z = g_doorStatus[closest_idx_z * 2 + door_hit_idx_z].isOpen;
