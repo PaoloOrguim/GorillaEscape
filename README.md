@@ -14,7 +14,7 @@
    - Correr no shift
    - Gorila: Toda mecânica de movimentação, velocidade gradual.
 
-   - **Paolo Orguim**  
+   **Paolo Orguim**  
    - Modelagem de todos objetos com excessão das portas.
    - Spotlight da Lanterna
    - Escolha de texturas
@@ -24,73 +24,56 @@
    - SkyBox
    - Bananas: Mecânica de Coleta
    - Folhas: Curvas de Bezier
-   - Até 09/05/2025: preencher formulário com integrantes e descrição do projeto.  
-   - Incluir em `hash-entrega.txt` o hash do commit final e a URL do repositório.
    - Efeitos sonoros: Passos, Gorila, Banana e Portas.
 
-2. **Código Próprio (< 15 %)**  
-   - Máximo de 15 % de código de terceiros (identificar cada trecho com `// FONTE: …`).  
-   - Uso de código extra será considerado plágio e receberá nota zero.
+## 2. Uso de ferramentas IA 
+  As ferramentas ChatGPT e Gemini foram utilizadas pontualmente. Seus principais usos e consequências serão listados abaixo:
+   - Guia para confecção de features extras: Por não conhecermos recursos específicos de OpenGL, sempre que estavamos em dúvida se valeria a pena implementar algo extra perguntavamos para a ferramenta o grau de complexidade esperado e por onde começar a procurar na documentação. Isso acelerou o processo e permitiu o corte de features que pareciam simples mas não eram (Movimentação mais inteligente do Gorila, por exemplo).
+   - Depuração: Tentamos utilizar a ferramenta para depuração tanto dos arquivos C quanto os shaders. A ferramenta não lidou muito bem e a maior parte da depuração foi feita manualmente. Depuração em C não é um problema para nós, porém depurar os shaders acabou se tornando mais complexo pela falta de conhecimento das técnicas adequadas. Entretanto, em momentos pontuais as ferramentas conseguiram apontar erros bobos que passavam despercebidos.
+   - Implementação do fullscreen: O toggle do fullscreen era algo desejado, porém não queriamos dedicar muito tempo para implementá-lo. A função que ativa/desativa o fullscreen foi 100% feita por IA e funcionou perfeitamente. A integração e binding ao F11 foi feita por nós.
+   - Divisão de tarefas: Inicialmente, quando o trabalho parecia muito grande e não sabiamos muito bem por onde começar, enviamos o enunciado a ferramenta e pedimos para dividir em sub-tarefas independentes para que conseguíssemos mapear melhor o que cada um faria. A ferramenta foi satisfatória nesse ponto.
+   - Geração de script de instalação de dependências com base no makefile.
 
-3. **Interação & Performance**  
-   - Entrada em tempo real (mouse + teclado).  
-   - FPS estável, sem travamentos que prejudiquem a jogabilidade.
+## 3. Processo de Desenvolvimento
+  Como mencionado anteriormente, utilizamos ferramentas de IA inicialmente para detalhar e destrinchar o processo de desenvolvimento. Após isso, dividimos as features por afinidade. Paolo gosta muito da parte de modelagem 3D e ambientação enquanto Érico gosta mais da parte de movimentação e iluminação.
+  Devido as rotinas de cada um, decidimos que cada um implementaria uma serie de features em sequência e depois pararia de mexer para que o outro fizesse sua parte. Esse ciclo foi iterado algumas vezes. Isso foi bom pois evitou problemas de merge (embora as features fossem bastante independentes). 
+  Algo que serve como auto critíca é a falta de organização no código. Normalmente o fluxo normal de desenvolvimento seria Idealizar feature -> Prova de Conceito -> (Se funcionar) Integrar no código de forma organizada e Modular.
+  Porém, acabamos empolgando com a adição de features e muitas vezes pulamos a integração organizada e fomos direto para outra feature.
+  Como o desenvolvimento foi feito a 2 e num contexto didático, isso não foi problemático. Porém, em um projeto mais escalável e com mais pessoas com certeza seria um problema.
+  Quanto a aplicação dos conceitos da disciplina, acreditamos que foi bastante satisfatório. A implementação da mecânica das portas foi feita utilizando 100% dos conteúdos aprendidos na disciplina (Transformações Hierárquicas, Transformações no tempo), ficou bastante bacana. As colisões e iluminação, partes complexas para algum leigo na área, também foram implementadas de forma orgânica.
 
-4. **Lógica Não‑Trivial**  
-   - Deve existir objetivo ou gameplay (jogo ou aplicação interativa) — não basta “carregar e rotacionar modelo”.
+## 4. Imagens (Diferentes tipos de iluminação)
+![gorila](https://github.com/user-attachments/assets/a9aa8518-667e-4da5-8641-f0b9724d408e)
+Gorila, o inimigo do jogo. Único objeto com iluminação difusa.
 
-5. **Matrizes “Na Mão”**  
-   - Implementar Model, View e Projection manualmente.  
-   - **Não** usar `gluLookAt`, `glm::lookAt`, `glm::perspective` etc.
+![banana](https://github.com/user-attachments/assets/720574a2-7456-452b-a358-ecd3f60f5f31)
+Banana, o objetivo do jogo. Iluminação de Blinn-Phong.
 
-6. **Transformações pelo Usuário**  
-   - O usuário deve poder controlar transformações em **objetos** (não apenas câmera).
+![sombrio](https://github.com/user-attachments/assets/b8dc84a9-7377-4891-bb55-8a1346b48001)
+Sem a lanterna ligada, o jogo fica sombrio.
 
-7. **Múltiplas Câmeras**  
-   - Implementar pelo menos duas câmeras distintas (ex.: look‑at e livre).
+![arvore](https://github.com/user-attachments/assets/420101e4-3b48-4646-b688-cd3327a82967)
+Árvore, único objeto com modelo de Gourad. 
 
-8. **Instâncias de Objetos**  
-   - Desenhar um mesmo modelo com duas ou mais instâncias (diferentes Model matrices).
+## 5. Como Jogar
+  Ao iniciar o jogo, o jogador fica em frente a uma placa que ensina os comandos básicos. Eles são:
+   - (W,A,S,D) Movimentação
+   - (SHIFT) Correr
+   - (F) Toggle Lanterna
+   - (E) Interagir com objetos (Bananas e Portas)
+   - (L) Toggle Câmera Livre
+   - (MOUSE) Direção da Câmera
+     
+![inicio](https://github.com/user-attachments/assets/173e0d3c-1292-4be9-971c-110de0892c43)
+Observação: Foto com reflexo pois fois tirada pelo celular. 
 
-9. **Colisões**  
-   - Ministrar pelo menos três testes de interseção diferentes (ex.: ponto‑esfera, cubo‑plano, cubo‑cubo).  
-   - Código de colisões em arquivo separado: `collisions.cpp`.
+## 5. Passos Necessários para Compilação e Execução da Aplicação
+  Para compilar e executar a aplicação, basta estar em um ambiente Linux, instalar as dependências e compilar através do make.
+  Sinceramente, não nos recordamos de quais bibliotecas instalamos desde o início, então pedimos ao ChatGPT que gerasse um script de instalação com base no makefile. Funcionou para nós, mas caso não funcione é possível ver qual biblioteca faltou pelo log de erro da compilação.
+  Passos:
+   - Baixar arquivos do github.
+   - Ir para raiz do projeto.
+   - Executar script de instalação de dependências: sudo ./install_deps.sh    (Caso não funcione, habilite execução com   chmod +x install_deps.sh)
+   - Compilar e executar: make run    (Caso erro de compilação, revisar se faltou alguma lib.)
+   - Fim!
 
-10. **Iluminação**  
-    - Implementar modelos difuso (Lambert) e especular (Blinn‑Phong).  
-    - Incluir um objeto com **Gouraud** (vertex‑lighting) e outro com **Phong** (pixel‑lighting).
-
-11. **Mapeamento de Texturas**  
-    - **Todos** os objetos usam texturas (mínimo 3 imagens diferentes).  
-    - UVs corretamente mapeadas (sem esticamentos visíveis).
-
-12. **Curva de Bézier Cúbica**  
-    - Pelo menos um objeto move-se seguindo uma curva de Bézier cúbica.
-
-13. **Animação Baseada em Tempo**  
-    - Movimentações (objetos e câmera) dependem de Δt, garantindo velocidade estável independente do FPS.
-
-14. **Entrega Completa**  
-    - ZIP contendo:  
-      - código-fonte completo (com `collisions.cpp`),  
-      - `hash-entrega.txt`,  
-      - binário + dependências,  
-      - `README.md` com instruções de compilação/uso,  
-      - ≥ 2 capturas de tela,  
-      - link ou MP4 do vídeo de apresentação (3–5 min).
-
----
-
-## 2. Itens Opcionais (Bônus)
-
-- Rasterização de curvas/pads de Bézier  
-- Efeitos sonoros (ex.: miniaudio)  
-- Sistema de partículas  
-- Sombras (shadow‑mapping, soft shadows)  
-- Billboards / Sprites  
-- Interface Gráfica (ImGui)  
-- Rasterização de texto avançada (FreeType‑GL)  
-- Picking (seleção por mouse)  
-- Mapeamento avançado (normal/bump/displacement/environment)  
-- Ciclo dia/noite com skybox animado  
-- Qualquer outra funcionalidade de CG interativa  
