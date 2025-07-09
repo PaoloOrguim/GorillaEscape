@@ -36,10 +36,18 @@
 
 ## 3. Processo de Desenvolvimento
   Como mencionado anteriormente, utilizamos ferramentas de IA inicialmente para detalhar e destrinchar o processo de desenvolvimento. Após isso, dividimos as features por afinidade. Paolo gosta muito da parte de modelagem 3D e ambientação enquanto Érico gosta mais da parte de movimentação e iluminação.  
+
+    
   Devido as rotinas de cada um, decidimos que cada um implementaria uma serie de features em sequência e depois pararia de mexer para que o outro fizesse sua parte. Esse ciclo foi iterado algumas vezes. Isso foi bom pois evitou problemas de merge (embora as features fossem bastante independentes).  
+
+    
   Algo que serve como auto critíca é a falta de organização no código. Normalmente o fluxo normal de desenvolvimento seria Idealizar feature -> Prova de Conceito -> (Se funcionar) Integrar no código de forma organizada e Modular.  
   Porém, acabamos empolgando com a adição de features e muitas vezes pulamos a integração organizada e fomos direto para outra feature.  
+
+    
   Como o desenvolvimento foi feito a 2 e num contexto didático, isso não foi problemático. Porém, em um projeto mais escalável e com mais pessoas com certeza seria um problema.  
+
+    
   Quanto a aplicação dos conceitos da disciplina, acreditamos que foi bastante satisfatório. A implementação da mecânica das portas foi feita utilizando 100% dos conteúdos aprendidos na disciplina (Transformações Hierárquicas, Transformações no tempo), ficou bastante bacana. As colisões e iluminação, partes complexas para algum leigo na área, também foram implementadas de forma orgânica.  
 
 ## 4. Imagens (Diferentes tipos de iluminação)
