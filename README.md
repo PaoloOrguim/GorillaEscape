@@ -75,5 +75,6 @@ Observação: Foto com reflexo pois fois tirada pelo celular.
    - Ir para raiz do projeto.
    - Executar script de instalação de dependências: sudo ./install_deps.sh    (Caso não funcione, habilite execução com   chmod +x install_deps.sh)
    - Compilar e executar: make run    (Caso erro de compilação, revisar se faltou alguma lib.)
+   - Pode aparecer o aviso de que o programar parou de funcionar, basta esperar um pouco.
    - Fim!
 
