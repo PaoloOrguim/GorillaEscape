@@ -568,6 +568,37 @@ int main(int argc, char* argv[])
     static float skyboxAngle = 0.0f;
     const float SKYBOX_ROT_SPEED = glm::radians(1.0f);
 
+    std::vector<glm::vec2> leafPoints = {
+    /* I   */ glm::vec2(-25.81f, -27.91f),
+    /* J   */ glm::vec2(-18.72f, -19.47f),
+    /* M   */ glm::vec2(   6.96f, -28.18f),
+    /* N   */ glm::vec2(-11.27f, -29.97f),
+    /* O   */ glm::vec2(   6.42f, -19.20f),
+    /* P   */ glm::vec2(  22.66f, -27.82f),
+    /* Q   */ glm::vec2(  18.44f, -21.80f),
+    /* R   */ glm::vec2(   8.30f, -10.94f),
+    /* S   */ glm::vec2(   5.00f,   5.00f),
+    /* T   */ glm::vec2(   7.94f,   7.46f),
+    /* U   */ glm::vec2(   4.26f,  -6.72f),
+    /* V   */ glm::vec2(-10.01f,  -7.98f),
+    /* W   */ glm::vec2(-13.42f,  -4.57f),
+    /* Z   */ glm::vec2(  -8.75f,   3.60f),
+    /* A1  */ glm::vec2(-11.80f,   8.18f),
+    /* B1  */ glm::vec2(-31.19f,   4.76f),
+    /* C1  */ glm::vec2(-28.14f,  -6.90f),
+    /* D1  */ glm::vec2(-29.49f,  13.47f),
+    /* F1  */ glm::vec2(  -5.00f,  15.00f),
+    /* H1  */ glm::vec2(   8.84f,  14.19f),
+    /* I1  */ glm::vec2(  19.43f,  16.61f),
+    /* J1  */ glm::vec2(  27.96f,  14.64f),
+    /* M1  */ glm::vec2(  30.02f, -16.51f),
+    /* N1  */ glm::vec2(  26.97f,  -4.48f),
+    /* O1  */ glm::vec2(  -1.75f,  20.92f),
+    /* P1  */ glm::vec2(   1.03f,  30.17f),
+    /* Q1  */ glm::vec2(-16.20f,  30.62f),
+    /* R1  */ glm::vec2(  19.16f,  31.33f),
+    };
+
     initBananas();
 
     // Gorilla close audio: Howler Monkey by Globofonia -- https://freesound.org/s/587776/ -- License: Attribution 4.0
@@ -1068,20 +1099,33 @@ int main(int argc, char* argv[])
 
         glm::vec3 pos = bezierCubic(leafT, P0,P1,P2,P3);
 
-        model = Matrix_Translate(pos.x - 3.0f, pos.y, pos.z - 24.0f) // -2.0f,0.0f,-24.0f
-                * Matrix_Scale(4.8f, 4.8f, 4.8f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, LEAF_04);
-        DrawVirtualObject("Leaf_04");
+        // model = Matrix_Translate(pos.x - 3.0f, pos.y, pos.z - 24.0f) // -2.0f,0.0f,-24.0f
+        //         * Matrix_Scale(4.8f, 4.8f, 4.8f);
+        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        // glUniform1i(g_object_id_uniform, LEAF_04);
+        // DrawVirtualObject("Leaf_04");
 
-        model = Matrix_Translate(pos.x - 3.0f, pos.y, pos.z - 24.0f) // -2.0f,0.0f,-24.0f
-                * Matrix_Rotate_X(M_PI)
-                * Matrix_Rotate_Y(M_PI)
-                * Matrix_Rotate_Z(M_PI)
-                * Matrix_Scale(4.8f, 4.8f, 4.8f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        // model = Matrix_Translate(pos.x - 3.0f, pos.y, pos.z - 24.0f) // -2.0f,0.0f,-24.0f
+        //         * Matrix_Rotate_X(M_PI)
+        //         * Matrix_Rotate_Y(M_PI)
+        //         * Matrix_Rotate_Z(M_PI)
+        //         * Matrix_Scale(4.8f, 4.8f, 4.8f);
+        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        // glUniform1i(g_object_id_uniform, LEAF_04);
+        // DrawVirtualObject("Leaf_04");
+
+        // Attempt at drawing multiple leaf models
         glUniform1i(g_object_id_uniform, LEAF_04);
-        DrawVirtualObject("Leaf_04");
+        for (const auto &pt : leafPoints) {
+            // pt.x é o offset em X, pt.y é o offset em Z
+            glm::mat4 model =
+                Matrix_Translate(pt.x + pos.x, pos.y, pt.y + pos.z)
+                * Matrix_Scale(4.8f, 4.8f, 4.8f);
+
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            DrawVirtualObject("Leaf_04");
+        }
+        // End of attempt at drawing multiple leaf models
 
         float factor = 3.5;
         float buildingSize = 0.1111f*factor;
