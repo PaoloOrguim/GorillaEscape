@@ -832,14 +832,24 @@ int main(int argc, char* argv[])
         // the same camera as the other objects, so preserve the same
         // view matrix.
 
+        // Testing how to rotate teh skybox
         skyboxAngle += SKYBOX_ROT_SPEED * g_deltaTime;
-        glm::mat4 skybox_rotation = Matrix_Rotate_Y(skyboxAngle);
+        // glm::mat4 skybox_rotation = Matrix_Rotate_Y(skyboxAngle);
+        // glm::mat4 viewNoTrans = view;
+        // viewNoTrans[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
         // Apply the rotation to the skybox model matrix
-        glm::mat4 skybox_view = skybox_rotation * view;
+        //glm::mat4 skybox_view = viewNoTrans * skybox_rotation;
+        glm::mat4 skyRot = Matrix_Rotate_Y(skyboxAngle);
+        glm::mat4 viewOnlyRot = glm::mat4(glm::mat3(view));
+        glm::mat4 skybox_view = viewOnlyRot * skyRot;
+        glm::mat4 skybox_model = Matrix_Identity();
+        // End of rotating test
+        
         // <eslgastal> Move the skybox with the camera/player, to give
         // the illustion of being "at infinity."
-        glm::mat4 skybox_model =
-            Matrix_Translate(player_position.x, player_position.y, player_position.z);
+        //glm::mat4 skybox_view = view; 
+        //glm::mat4 skybox_model =
+        //    Matrix_Translate(player_position.x, player_position.y, player_position.z);
 
         // Pass the modified view matrix (without translation) and identity model matrix to the shader
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(skybox_model));
