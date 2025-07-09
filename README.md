@@ -1,13 +1,32 @@
 # GorillaEscape
-Game about escaping a gorilla
-# Requisitos do Trabalho Final
 
-## 1. Itens Obrigatórios
+# Relatório
 
-1. **Dupla & GitHub**  
-   - Trabalho em dupla com repositório no GitHub.  
+## 1. Contribuições de Cada Membro
+
+   **Érico Breyer**  
+   - Modelos de Iluminação
+   - Toggle Lanterna
+   - Portas: Modelagem, Transformação Hierárquica e Mecânica de movimento ao abrir e fechar.
+   - Câmera Livre
+   - Movimentação do Jogador
+   - F11 ativa Full Screen (Função feita pelo GPT, Integração e key binding feita pelo membro)
+   - Correr no shift
+   - Gorila: Toda mecânica de movimentação, velocidade gradual.
+
+   - **Paolo Orguim**  
+   - Modelagem de todos objetos com excessão das portas.
+   - Spotlight da Lanterna
+   - Escolha de texturas
+   - Confecção dos prédios no Blender
+   - Colisões: Prédios, portas, cercas, bananas e gorila.
+   - Fog (Neblina a distância)
+   - SkyBox
+   - Bananas: Mecânica de Coleta
+   - Folhas: Curvas de Bezier
    - Até 09/05/2025: preencher formulário com integrantes e descrição do projeto.  
    - Incluir em `hash-entrega.txt` o hash do commit final e a URL do repositório.
+   - Efeitos sonoros: Passos, Gorila, Banana e Portas.
 
 2. **Código Próprio (< 15 %)**  
    - Máximo de 15 % de código de terceiros (identificar cada trecho com `// FONTE: …`).  
